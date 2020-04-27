@@ -17,11 +17,11 @@ Sequence Protein is converted to PSSM (length=15, dimentions=20) and CB feature 
 - Concate output from RNN layer and Maxout layer 
 - Last layer is Logictic Regression classifier
 
-![](C:\Users\admin\Desktop\topology_1.png)
+![](image/topology_1.png)
 
-![](C:\Users\admin\Downloads\topology_2.png)
+![](image/topology_2.png)
 
-![](C:\Users\admin\Downloads\topology_3.png)
+![](image/topology_3.png)
 
 ## 4. Hyper parameter:
 - Threshold
@@ -47,7 +47,7 @@ Sequence Protein is converted to PSSM (length=15, dimentions=20) and CB feature 
 
 
 
-![TensorBoard](C:\Users\admin\Desktop\TensorBoard.png)
+![TensorBoard](image/TensorBoard.png)
 
 ## 8. Data:
 - Data is automatically download from Google Drive (csv file) and parse to PSSM and CB feature respectively
