@@ -47,6 +47,7 @@ def main():
     maxout_units = [32, 64, 128, 256, 512, 1024]
     rnn_layers = [1,2,3]
     rnn_units = [32, 64, 128, 256, 512, 1024]
+    lr_decay = 1e-6
 
     hparams = {"threshold": np.random.random(size=(n_experiments,)), "batch_size": np.array(batch_size)[
         np.random.randint(low=0, high=len(batch_size), size=(n_experiments,))],
@@ -63,19 +64,20 @@ def main():
                "rnn_units": np.array(rnn_units)[np.random.randint(low=0, high=len(rnn_units), size=(n_experiments,))]}
 
     configs = [{"hparams": {
-      "threshold": hparams["threshold"][i],
-      "batch_size": int(hparams["batch_size"][i]),
-      "learning_rate": hparams["learning_rate"][i],
-      "n_epoch": 3,
-      # "n_epoch": int(hparams["n_epoch"][i]),
-      "optimizer": hparams["optimizer"][i],
-      "maxout_head": int(hparams["maxout_head"][i]),
-      "maxout_units": int(hparams["maxout_units"][i]),
-      "rnn_layers": int(hparams["rnn_layers"][i]),
-      "rnn_units": int(hparams["rnn_units"][i]),
+        "threshold": hparams["threshold"][i],
+        "batch_size": int(hparams["batch_size"][i]),
+        "learning_rate": hparams["learning_rate"][i],
+        "n_epoch": 3,
+        # "n_epoch": int(hparams["n_epoch"][i]),
+        "optimizer": hparams["optimizer"][i],
+        "maxout_head": int(hparams["maxout_head"][i]),
+        "maxout_units": int(hparams["maxout_units"][i]),
+        "rnn_layers": int(hparams["rnn_layers"][i]),
+        "rnn_units": int(hparams["rnn_units"][i]),
+        "lr_decay": lr_decay
     }} for i in range(n_experiments)]
 
-    if True:
+    if False:
         experiment(
           configs=configs,
           train_data=train_data,
@@ -83,17 +85,18 @@ def main():
           log_dir=log_dir
         )
     else:
-        config1 = {
+        config = {
             "hparams": {
-                "threshold": 0.5,
-                "batch_size": 32,
-                "learning_rate": 0.001,
-                "n_epoch": 1,
-                "optimizer": "adam",
-                "maxout_head": 1,
-                "maxout_units": 32,
-                "rnn_layers": 2,
-                "rnn_units": 32,
+                "threshold": 0.13618,
+                "batch_size": 1,
+                "learning_rate": 0.00016280409164167792,
+                "n_epoch": 50,
+                "optimizer": "nadam",
+                "maxout_head": 4,
+                "maxout_units": 128,
+                "rnn_layers": 1,
+                "rnn_units": 1024,
+                "lr_decay": 0#1e-6
               }
         }
 
@@ -112,7 +115,7 @@ def main():
         }
 
     experiment(
-        configs=[config1, config2],
+        configs=[config],
         train_data=train_data,
         test_data=test_data,
         log_dir=log_dir

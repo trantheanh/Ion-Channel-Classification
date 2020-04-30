@@ -39,9 +39,19 @@ def build_model(hparams):
     )(imd)
 
     model = tf.keras.models.Model(inputs=[mlp_input, rnn_input], outputs=output_tf)
+
+    def compute_loss(y_true, y_pred, b=0.05):
+        loss = keras.losses.binary_crossentropy(y_true, y_pred)
+        loss = keras.backend.abs(loss - b) + b
+        return loss
+
     model.compile(
-      optimizer=build_optimizer(optimizer_name=hparams["optimizer"], learning_rate=hparams["learning_rate"]),
-      loss=tf.keras.losses.binary_crossentropy,
+      optimizer=build_optimizer(
+          optimizer_name=hparams["optimizer"],
+          learning_rate=hparams["learning_rate"],
+          decay=hparams["lr_decay"]
+      ),
+      loss=keras.losses.binary_crossentropy,
       metrics=[
         BinaryAccuracy(hparams["threshold"]),
         BinaryMCC(hparams["threshold"]),

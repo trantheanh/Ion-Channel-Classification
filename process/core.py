@@ -114,8 +114,8 @@ def experiment(configs, train_data, test_data, log_dir):
         with tf.summary.create_file_writer(session_log_dir).as_default():
             print("\nEXPERIMENT: {}/{}".format(index+1, len(configs)))
             config["log_dir"] = session_log_dir
-            config["n_fold"] = 2
-            config["verbose"] = 0
+            config["n_fold"] = 5
+            config["verbose"] = 2
             hp.hparams(config["hparams"])
             train_result, dev_result, test_result = k_fold_experiment(
                 config=config,
