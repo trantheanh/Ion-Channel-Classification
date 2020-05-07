@@ -116,7 +116,7 @@ def main(argv):
         }
 
         experiment(
-            configs=[config, config],
+            configs=[config],
             train_data=train_data,
             test_data=test_data,
             log_dir=log_dir

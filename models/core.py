@@ -20,19 +20,9 @@ def build_model(hparams):
           return_sequences=(i+1 < hparams["rnn_layers"])
       )(rnn_imd)
 
-    mlp_imd = []
-    for i in range(hparams["maxout_head"]):
-        mlp_imd.append(layers.Dense(units=hparams["maxout_units"])(mlp_input))
-
-    if hparams["maxout_head"] > 1:
-        mlp_imd = layers.Maximum()(mlp_imd)
-    elif hparams["maxout_head"] == 1:
-        mlp_imd = layers.Activation(activation="relu")(mlp_imd[0])
-    else:
-        mlp_imd = mlp_input
+    mlp_imd = layers.Activation(activation="tanh")(mlp_input)
 
     imd = layers.Concatenate(axis=-1)([rnn_imd, mlp_imd])
-    # imd = rnn_imd
 
     output_tf = layers.Dense(
       units=1,
