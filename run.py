@@ -7,11 +7,24 @@ import shutil
 from data.loader import download_from_shareable_link, parse_csv_data
 from constant.index import DataIdx
 from process.core import experiment
+from absl import flags, app
 
 """# MAIN FUNCTION"""
 
+FLAGS = flags.FLAGS
 
-def main():
+flags.DEFINE_enum("optimizer", "nadam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
+flags.DEFINE_integer("batch_size", 1, "Batch size of traning data")
+flags.DEFINE_float("learning_rate", 0.00016280409164167792, "learning rate of optimizer")
+flags.DEFINE_integer("n_epoch", 100, "Number of training epoch")
+flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
+flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
+flags.DEFINE_integer("rnn_layers", 1, "Number of LSTM layer")
+flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
+flags.DEFINE_enum("is_tuning", "Y", ["Y", "N"], "running for auto hyper param tuning or specific setting")
+
+
+def main(argv):
     train_data_path = "https://drive.google.com/open?id=1EJ0VcOmKUUOpSQ4dDkhbhVzvbIjz-Wg5"
     test_data_path = "https://drive.google.com/open?id=14Xo1zxFKHrus1KPxmVJe-D0S8Px9OIlX"
     download_from_shareable_link(url=train_data_path, destination="train_data.csv")
@@ -34,8 +47,8 @@ def main():
 
     log_dir = os.path.join(os.getcwd(),"log", "hparam_tuning")
 
-    if os.path.isdir(log_dir):
-        shutil.rmtree(log_dir)
+    # if os.path.isdir(log_dir):
+    #     shutil.rmtree(log_dir)
 
     n_experiments = 1000
 
@@ -79,7 +92,7 @@ def main():
         "lr_decay": lr_decay
     }} for i in range(n_experiments)]
 
-    if True:
+    if FLAGS.is_tuning == "Y":
         experiment(
           configs=configs,
           train_data=train_data,
@@ -89,30 +102,16 @@ def main():
     else:
         config = {
             "hparams": {
-                "threshold": 0.13618,
-                "batch_size": 1024,
-                "learning_rate": 0.00016280409164167792,
-                "n_epoch": 1,
-                "optimizer": "nadam",
-                "maxout_head": 4,
-                "maxout_units": 128,
-                "rnn_layers": 1,
-                "rnn_units": 1,
-                "lr_decay": 0#1e-6
-              }
-        }
-
-        config2 = {
-            "hparams": {
                 "threshold": 0.5,
-                "batch_size": 32,
-                "learning_rate": 0.001,
-                "n_epoch": 1,
-                "optimizer": "adam",
-                "maxout_head": 0,
-                "maxout_units": 32,
-                "rnn_layers": 1,
-                "rnn_units": 62,
+                "batch_size": FLAGS.batch_size,
+                "learning_rate": FLAGS.learning_rate,
+                "n_epoch": FLAGS.n_epoch,
+                "optimizer": FLAGS.optimizer,
+                "maxout_head": FLAGS.maxout_head,
+                "maxout_units": FLAGS.maxout_units,
+                "rnn_layers": FLAGS.rnn_layers,
+                "rnn_units": FLAGS.rnn_units,
+                "lr_decay": lr_decay
               }
         }
 
@@ -125,5 +124,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    app.run(main)
 

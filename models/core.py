@@ -22,7 +22,7 @@ def build_model(hparams):
 
     mlp_imd = []
     for i in range(hparams["maxout_head"]):
-      mlp_imd.append(layers.Dense(units=hparams["maxout_units"])(mlp_input))
+        mlp_imd.append(layers.Dense(units=hparams["maxout_units"])(mlp_input))
 
     if hparams["maxout_head"] > 1:
         mlp_imd = layers.Maximum()(mlp_imd)
