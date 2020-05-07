@@ -20,7 +20,7 @@ def build_model(hparams):
           return_sequences=(i+1 < hparams["rnn_layers"])
       )(rnn_imd)
 
-    mlp_imd = layers.Activation(activation="tanh")(mlp_input)
+    mlp_imd = layers.Dense(units=hparams["maxout_units"], activation="tanh")(mlp_input)
 
     imd = layers.Concatenate(axis=-1)([rnn_imd, mlp_imd])
 
