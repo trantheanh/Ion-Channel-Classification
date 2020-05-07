@@ -7,7 +7,9 @@ import os
 from models.core import build_model
 from data.dataset import build_train_ds, build_test_ds
 from constant.index import DataIdx, MetricIdx
-from util.log import log_result
+from util.log import log_result, write
+from callbacks.core import build_callbacks
+from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity
 
 
 """# Build single training process"""
@@ -16,28 +18,86 @@ from util.log import log_result
 def train(config, train_ds, test_ds, need_summary=False):
     hparams = config["hparams"]
     n_epoch = hparams["n_epoch"]
+    class_weight = config["class_weight"]
     verbose = config["verbose"]
 
     callbacks = []
-    validation_ds = None
 
     if need_summary:
-        callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=config["log_dir"]))
-        validation_ds = test_ds
+        callbacks = build_callbacks(log_dir=config["log_dir"])
 
     model = build_model(hparams)
     model.fit(
         train_ds,
-        validation_data=validation_ds,
+        validation_data=test_ds,
         epochs=n_epoch,
         verbose=verbose,
+        class_weight=class_weight,
         shuffle=True,
         callbacks=callbacks
     )
 
-    train_result = model.evaluate(train_ds, verbose=verbose)
-    test_result = model.evaluate(test_ds, verbose=verbose)
+    train_result = evaluate(model, train_ds)
+    test_result = evaluate(model, test_ds)
     return train_result, test_result
+
+
+"""# Build evaluation process"""
+
+
+def evaluate(model, test_ds):
+    results = [[y, model.predict(x)] for x, y in test_ds]
+    y_true = np.concatenate([results[i][0] for i in range(len(results))], axis=0)
+    y_pred = np.concatenate([results[i][1] for i in range(len(results))], axis=0).flatten()
+    thresholds = np.arange(start=0.00, stop=1, step=0.01)
+
+    results = {}
+    for i in range(len(thresholds)):
+        acc = BinaryAccuracy(threshold=thresholds[i])(y_true=y_true, y_pred=y_pred)
+        mcc = BinaryMCC(threshold=thresholds[i])(y_true=y_true, y_pred=y_pred)
+        sen = BinarySensitivity(threshold=thresholds[i])(y_true=y_true, y_pred=y_pred)
+        spec = BinarySpecificity(threshold=thresholds[i])(y_true=y_true, y_pred=y_pred)
+        results[thresholds[i]] = np.array([acc, mcc, sen, spec])
+
+    return results
+
+
+def evaluate_on_threshold(model, threshold, test_ds):
+    results = [[y, model.predict(x)] for x, y in test_ds]
+    y_true = np.concatenate([results[i][0] for i in range(len(results))], axis=0)
+    y_pred = np.concatenate([results[i][1] for i in range(len(results))], axis=0).flatten()
+
+    acc = BinaryAccuracy(threshold=threshold)(y_true=y_true, y_pred=y_pred)
+    mcc = BinaryMCC(threshold=threshold)(y_true=y_true, y_pred=y_pred)
+    sen = BinarySensitivity(threshold=threshold)(y_true=y_true, y_pred=y_pred)
+    spec = BinarySpecificity(threshold=threshold)(y_true=y_true, y_pred=y_pred)
+
+    return np.array[acc, mcc, sen, spec]
+
+
+def get_best_threshold(results):
+    best_mcc = -1
+    best_threshold = None
+    for threshold, result in results.items():
+        mcc = result[MetricIdx.MCC]
+        if mcc > best_mcc:
+            best_mcc = mcc
+            best_threshold = threshold
+
+    return best_threshold
+
+
+def avg_evaluate(all_results, n_fold):
+    final_result = {}
+    if len(all_results) > 0:
+        for threshold, result in all_results[0].items():
+            final_result[threshold] = np.array([0, 0, 0, 0])
+
+    for i, results in enumerate(all_results):
+        for threshold, result in results.items():
+            final_result[threshold] = final_result[threshold] + result/n_fold
+
+    return final_result
 
 
 """# Build k-fold training process"""
@@ -46,6 +106,7 @@ def train(config, train_ds, test_ds, need_summary=False):
 def k_fold_experiment(config, train_data, test_data):
     hparams = config["hparams"]
     n_fold = config["n_fold"]
+    batch_size = hparams["batch_size"]
 
     # Train on K-fold
     folds = StratifiedKFold(
@@ -82,8 +143,13 @@ def k_fold_experiment(config, train_data, test_data):
         train_results.append(train_result)
         dev_results.append(dev_result)
 
-    train_result = np.mean(np.array(train_results), axis=0)
-    dev_result = np.mean(np.array(dev_results), axis=0)
+    # train_result = np.mean(np.array(train_results), axis=0)
+    train_result = avg_evaluate(train_results, n_fold=n_fold)
+    dev_result = avg_evaluate(dev_results, n_fold=n_fold)
+
+    hparams["threshold"] = get_best_threshold(dev_result)
+    train_result = train_result[hparams["threshold"]]
+    dev_result = dev_result[hparams["threshold"]]
 
     # Train on all & evaluate on test set
     train_ds = build_train_ds(
@@ -100,7 +166,7 @@ def k_fold_experiment(config, train_data, test_data):
     )
 
     _, test_result = train(config=config, train_ds=train_ds, test_ds=test_ds, need_summary=True)
-
+    test_result = test_result[hparams["threshold"]]
     return train_result, dev_result, test_result
 
 
@@ -110,32 +176,21 @@ def k_fold_experiment(config, train_data, test_data):
 def experiment(configs, train_data, test_data, log_dir):
     for index, config in enumerate(configs):
         session_log_dir = os.path.join(log_dir, "session_{}".format(index+1))
-        print(session_log_dir)
-        with tf.summary.create_file_writer(session_log_dir).as_default():
-            print("\nEXPERIMENT: {}/{}".format(index+1, len(configs)))
-            config["log_dir"] = session_log_dir
-            config["n_fold"] = 5
-            config["verbose"] = 2
-            hp.hparams(config["hparams"])
-            train_result, dev_result, test_result = k_fold_experiment(
-                config=config,
-                train_data=train_data,
-                test_data=test_data
-            )
+        print("\nEXPERIMENT: {}/{}".format(index+1, len(configs)))
+        print(config)
+        config["log_dir"] = session_log_dir
+        config["n_fold"] = 5
+        config["class_weight"] = {
+              0: 1,
+              1: 1
+        }
+        config["verbose"] = 2
+        train_result, dev_result, test_result = k_fold_experiment(
+            config=config,
+            train_data=train_data,
+            test_data=test_data
+        )
 
-            log_result(train_result, dev_result, test_result)
-
-            tf.summary.scalar(name="train_acc", data=train_result[MetricIdx.ACC], step=1)
-            tf.summary.scalar(name="train_mcc", data=train_result[MetricIdx.MCC], step=1)
-            tf.summary.scalar(name="train_sen", data=train_result[MetricIdx.SEN], step=1)
-            tf.summary.scalar(name="train_spec", data=train_result[MetricIdx.SPEC], step=1)
-
-            tf.summary.scalar(name="dev_acc", data=dev_result[MetricIdx.ACC], step=1)
-            tf.summary.scalar(name="dev_mcc", data=dev_result[MetricIdx.MCC], step=1)
-            tf.summary.scalar(name="dev_sen", data=dev_result[MetricIdx.SEN], step=1)
-            tf.summary.scalar(name="dev_spec", data=dev_result[MetricIdx.SPEC], step=1)
-
-            tf.summary.scalar(name="test_acc", data=test_result[MetricIdx.ACC], step=1)
-            tf.summary.scalar(name="test_mcc", data=test_result[MetricIdx.MCC], step=1)
-            tf.summary.scalar(name="test_sen", data=test_result[MetricIdx.SEN], step=1)
-            tf.summary.scalar(name="test_spec", data=test_result[MetricIdx.SPEC], step=1)
+        write(session_log_dir, "train", train_result, config["hparams"])
+        write(session_log_dir, "dev", dev_result, config["hparams"])
+        write(session_log_dir, "test", test_result, config["hparams"])

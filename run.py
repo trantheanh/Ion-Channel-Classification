@@ -35,21 +35,23 @@ def main():
     log_dir = os.path.join(os.getcwd(),"log", "hparam_tuning")
 
     if os.path.isdir(log_dir):
-      shutil.rmtree(log_dir)
+        shutil.rmtree(log_dir)
 
     n_experiments = 1000
 
     batch_size = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
-    learning_rate = (0.0001, 5)
+    #batch_size = [1, 2, 4, 8, 16, 32]
+    learning_rate = (0.0001, 0.5)
     n_epoch = (20, 200)
     optimizer = ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"]
     maxout_head = [1,2,3,4]
     maxout_units = [32, 64, 128, 256, 512, 1024]
     rnn_layers = [1,2,3]
     rnn_units = [32, 64, 128, 256, 512, 1024]
-    lr_decay = 1e-6
+    lr_decay = 0#1e-6
 
-    hparams = {"threshold": np.random.random(size=(n_experiments,)), "batch_size": np.array(batch_size)[
+    hparams = {"threshold": np.random.random(size=(n_experiments,)),
+               "batch_size": np.array(batch_size)[
         np.random.randint(low=0, high=len(batch_size), size=(n_experiments,))],
                "learning_rate": np.logspace(np.log10(learning_rate[0]), np.log10(learning_rate[1]), base=10,
                                             num=n_experiments),
@@ -64,11 +66,11 @@ def main():
                "rnn_units": np.array(rnn_units)[np.random.randint(low=0, high=len(rnn_units), size=(n_experiments,))]}
 
     configs = [{"hparams": {
-        "threshold": hparams["threshold"][i],
+        "threshold": 0.5,
         "batch_size": int(hparams["batch_size"][i]),
         "learning_rate": hparams["learning_rate"][i],
-        "n_epoch": 3,
-        # "n_epoch": int(hparams["n_epoch"][i]),
+        #"n_epoch": 3,
+        "n_epoch": int(hparams["n_epoch"][i]),
         "optimizer": hparams["optimizer"][i],
         "maxout_head": int(hparams["maxout_head"][i]),
         "maxout_units": int(hparams["maxout_units"][i]),
@@ -77,7 +79,7 @@ def main():
         "lr_decay": lr_decay
     }} for i in range(n_experiments)]
 
-    if False:
+    if True:
         experiment(
           configs=configs,
           train_data=train_data,
@@ -88,14 +90,14 @@ def main():
         config = {
             "hparams": {
                 "threshold": 0.13618,
-                "batch_size": 1,
+                "batch_size": 1024,
                 "learning_rate": 0.00016280409164167792,
-                "n_epoch": 50,
+                "n_epoch": 1,
                 "optimizer": "nadam",
                 "maxout_head": 4,
                 "maxout_units": 128,
                 "rnn_layers": 1,
-                "rnn_units": 1024,
+                "rnn_units": 1,
                 "lr_decay": 0#1e-6
               }
         }
@@ -114,12 +116,12 @@ def main():
               }
         }
 
-    experiment(
-        configs=[config],
-        train_data=train_data,
-        test_data=test_data,
-        log_dir=log_dir
-    )
+        experiment(
+            configs=[config, config],
+            train_data=train_data,
+            test_data=test_data,
+            log_dir=log_dir
+        )
 
 
 if __name__ == "__main__":
