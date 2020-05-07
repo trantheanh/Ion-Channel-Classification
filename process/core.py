@@ -3,6 +3,7 @@ from sklearn.model_selection import StratifiedKFold
 import numpy as np
 from tensorboard.plugins.hparams import api as hp
 import os
+import datetime
 
 from models.core import build_model
 from data.dataset import build_train_ds, build_test_ds
@@ -175,7 +176,7 @@ def k_fold_experiment(config, train_data, test_data):
 
 def experiment(configs, train_data, test_data, log_dir):
     for index, config in enumerate(configs):
-        session_log_dir = os.path.join(log_dir, "session_{}".format(index+1))
+        session_log_dir = os.path.join(log_dir, "session_{}".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S")))
         print("\nEXPERIMENT: {}/{}".format(index+1, len(configs)))
         print(config)
         config["log_dir"] = session_log_dir
