@@ -21,7 +21,7 @@ def build_model(hparams):
           activation="sigmoid"
       )(rnn_imd)
 
-    mlp_imd = layers.Dense(units=hparams["maxout_units"], activation="tanh")(mlp_input)
+    mlp_imd = layers.Dense(units=hparams["maxout_units"], activation="sigmoid")(mlp_input)
 
     imd = layers.Concatenate(axis=-1)([rnn_imd, mlp_imd])
 
