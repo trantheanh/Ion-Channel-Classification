@@ -16,7 +16,7 @@ from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpe
 """# Build single training process"""
 
 
-def train(config, train_ds, test_ds, need_summary=False):
+def train(config, train_ds, test_ds, need_summary=False, need_threshold=True):
     hparams = config["hparams"]
     n_epoch = hparams["n_epoch"]
     class_weight = config["class_weight"]
@@ -38,8 +38,12 @@ def train(config, train_ds, test_ds, need_summary=False):
         callbacks=callbacks
     )
 
-    train_result = evaluate(model, train_ds)
-    test_result = evaluate(model, test_ds)
+    if need_threshold:
+        train_result = evaluate(model, train_ds)
+        test_result = evaluate(model, test_ds)
+    else:
+        train_result = evaluate_on_threshold(model, train_ds, threshold=hparams["threshold"])
+        test_result = evaluate_on_threshold(model, test_ds, threshold=hparams["threshold"])
     return train_result, test_result
 
 
@@ -63,7 +67,7 @@ def evaluate(model, test_ds):
     return results
 
 
-def evaluate_on_threshold(model, threshold, test_ds):
+def evaluate_on_threshold(model, test_ds, threshold=0.5):
     results = [[y, model.predict(x)] for x, y in test_ds]
     y_true = np.concatenate([results[i][0] for i in range(len(results))], axis=0)
     y_pred = np.concatenate([results[i][1] for i in range(len(results))], axis=0).flatten()
@@ -73,7 +77,7 @@ def evaluate_on_threshold(model, threshold, test_ds):
     sen = BinarySensitivity(threshold=threshold)(y_true=y_true, y_pred=y_pred)
     spec = BinarySpecificity(threshold=threshold)(y_true=y_true, y_pred=y_pred)
 
-    return np.array[acc, mcc, sen, spec]
+    return {threshold: np.array[acc, mcc, sen, spec]}
 
 
 def get_best_threshold(results):
@@ -107,7 +111,6 @@ def avg_evaluate(all_results, n_fold):
 def k_fold_experiment(config, train_data, test_data):
     hparams = config["hparams"]
     n_fold = config["n_fold"]
-    batch_size = hparams["batch_size"]
 
     # Train on K-fold
     folds = StratifiedKFold(
@@ -144,7 +147,6 @@ def k_fold_experiment(config, train_data, test_data):
         train_results.append(train_result)
         dev_results.append(dev_result)
 
-    # train_result = np.mean(np.array(train_results), axis=0)
     train_result = avg_evaluate(train_results, n_fold=n_fold)
     dev_result = avg_evaluate(dev_results, n_fold=n_fold)
 
