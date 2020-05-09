@@ -16,7 +16,7 @@ from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpe
 """# Build single training process"""
 
 
-def train(config, train_ds, test_ds, need_summary=False, need_threshold=True):
+def train(config, train_ds, test_ds, need_summary=False, need_threshold=False):
     hparams = config["hparams"]
     n_epoch = hparams["n_epoch"]
     class_weight = config["class_weight"]
