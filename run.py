@@ -21,6 +21,7 @@ flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
 flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
 flags.DEFINE_integer("rnn_layers", 1, "Number of LSTM layer")
 flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
+flags.DEFINE_float("dropout", 0.2, "Dropout rate of last layer")
 flags.DEFINE_enum("is_tuning", "Y", ["Y", "N"], "running for auto hyper param tuning or specific setting")
 
 
@@ -62,8 +63,10 @@ def main(argv):
     rnn_layers = [1,2,3]
     rnn_units = [32, 64, 128, 256, 512, 1024]
     lr_decay = 0#1e-6
+    dropout = (0.2, 0.5)
 
     hparams = {"threshold": np.random.random(size=(n_experiments,)),
+               "dropout": np.random.random(size=(n_experiments,)) * (dropout[1] - dropout[0]) + dropout[0],
                "batch_size": np.array(batch_size)[
         np.random.randint(low=0, high=len(batch_size), size=(n_experiments,))],
                "learning_rate": np.logspace(np.log10(learning_rate[0]), np.log10(learning_rate[1]), base=10,
@@ -82,6 +85,7 @@ def main(argv):
         "threshold": 0.5,
         "batch_size": int(hparams["batch_size"][i]),
         "learning_rate": hparams["learning_rate"][i],
+        "dropout": hparams["dropout"][i],
         #"n_epoch": 3,
         "n_epoch": int(hparams["n_epoch"][i]),
         "optimizer": hparams["optimizer"][i],
@@ -111,7 +115,8 @@ def main(argv):
                 "maxout_units": FLAGS.maxout_units,
                 "rnn_layers": FLAGS.rnn_layers,
                 "rnn_units": FLAGS.rnn_units,
-                "lr_decay": lr_decay
+                "lr_decay": lr_decay,
+                "dropout": FLAGS.dropout,
               }
         }
 

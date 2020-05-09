@@ -36,6 +36,7 @@ def build_model(hparams):
 
     mlp_imd = layers.Activation(activation="sigmoid")(mlp_imd)
     imd = layers.Concatenate(axis=-1)([rnn_imd, mlp_imd])
+    imd = layers.Dropout(rate=hparams["dropout"])(imd)
 
     output_tf = layers.Dense(
       units=1,
