@@ -17,7 +17,8 @@ def build_model(hparams):
     for i in range(hparams["rnn_layers"]):
       rnn_imd = layers.LSTM(
           units=hparams["rnn_units"],
-          return_sequences=(i+1 < hparams["rnn_layers"])
+          return_sequences=(i+1 < hparams["rnn_layers"]),
+          activation="sigmoid"
       )(rnn_imd)
 
     mlp_imd = []
