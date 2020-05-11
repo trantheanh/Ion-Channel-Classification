@@ -22,6 +22,7 @@ from constant.index import DataIdx, MetricIdx
 from util.log import log_result, write
 from callbacks.core import build_callbacks
 from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity
+from process.core import train
 
 """# MAIN FUNCTION"""
 
@@ -29,12 +30,16 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_enum("optimizer", "nadam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
 flags.DEFINE_integer("batch_size", 1, "Batch size of traning data")
+# flags.DEFINE_integer("batch_size", 1024, "Batch size of traning data")
 flags.DEFINE_float("learning_rate", 0.00016280409164167792, "learning rate of optimizer")
 flags.DEFINE_integer("n_epoch", 100, "Number of training epoch")
+# flags.DEFINE_integer("n_epoch", 1, "Number of training epoch")
 flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
 flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
+# flags.DEFINE_integer("maxout_units", 1, "Number of maxout units")
 flags.DEFINE_integer("rnn_layers", 1, "Number of LSTM layer")
 flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
+# flags.DEFINE_integer("rnn_units", 1, "Number of RNN units")
 
 
 def main(argv):
@@ -60,7 +65,7 @@ def main(argv):
     ))
 
     # CONFIG DEFINE
-    log_dir = os.path.join(os.getcwd(),"log", "hparam_tuning")
+    log_dir = os.path.join(os.getcwd(), "log", "hparam_tuning")
 
     config = {
         "hparams": {
@@ -90,7 +95,6 @@ def main(argv):
     # RUN K FOLD
     hparams = config["hparams"]
     n_fold = config["n_fold"]
-    batch_size = hparams["batch_size"]
 
     # Train on K-fold
     folds = StratifiedKFold(
@@ -99,8 +103,6 @@ def main(argv):
         random_state=0
     ).split(train_data[DataIdx.MLP_FEATURE], train_data[DataIdx.LABEL])
 
-    train_results = []
-    dev_results = []
     for fold_index, fold in enumerate(folds):
         print("FOLD: {}".format(fold_index + 1))
         train_indexes, dev_indexes = fold
@@ -121,19 +123,47 @@ def main(argv):
         train_result, dev_result = train(
             config=config,
             train_ds=train_ds,
-            test_ds=dev_ds
+            test_ds=dev_ds,
+            need_threshold=True
         )
 
-        train_results.append(train_result)
-        dev_results.append(dev_result)
+        train_result = [
+            [
+                threshold,
+                result[MetricIdx.ACC],
+                result[MetricIdx.SPEC],
+                result[MetricIdx.SEN],
+                result[MetricIdx.MCC],
+                result[MetricIdx.SEN],
+                1 - result[MetricIdx.SPEC]
+            ]
+            for threshold, result in train_result.items()]
 
-    # train_result = np.mean(np.array(train_results), axis=0)
-    train_result = avg_evaluate(train_results, n_fold=n_fold)
-    dev_result = avg_evaluate(dev_results, n_fold=n_fold)
+        np.savetxt(
+            "fold_{}_train.csv".format(fold_index+1),
+            np.array(train_result),
+            delimiter=",",
+            header="THRESHOLD, ACC, SPEC, SEN, MCC, TPR, FPR"
+        )
 
-    hparams["threshold"] = get_best_threshold(dev_result)
-    train_result = train_result[hparams["threshold"]]
-    dev_result = dev_result[hparams["threshold"]]
+        dev_result = [
+            [
+                threshold,
+                result[MetricIdx.ACC],
+                result[MetricIdx.SPEC],
+                result[MetricIdx.SEN],
+                result[MetricIdx.MCC],
+                result[MetricIdx.SEN],
+                1 - result[MetricIdx.SPEC]
+            ]
+            for threshold, result in dev_result.items()]
+
+        np.savetxt(
+            "fold_{}_dev.csv".format(fold_index + 1),
+            np.array(dev_result),
+            delimiter=",",
+            header="THRESHOLD, ACC, SPEC, SEN, MCC, TPR, FPR"
+        )
 
     # Train on all & evaluate on test set
     train_ds = build_train_ds(
@@ -149,9 +179,52 @@ def main(argv):
         y=test_data[DataIdx.LABEL]
     )
 
-    _, test_result = train(config=config, train_ds=train_ds, test_ds=test_ds, need_summary=True)
-    test_result = test_result[hparams["threshold"]]
-    return train_result, dev_result, test_result
+    final_train_result, final_test_result = train(
+        config=config,
+        train_ds=train_ds,
+        test_ds=test_ds,
+        need_threshold=True
+    )
+
+    final_train_result = [
+        [
+            threshold,
+            result[MetricIdx.ACC],
+            result[MetricIdx.SPEC],
+            result[MetricIdx.SEN],
+            result[MetricIdx.MCC],
+            result[MetricIdx.SEN],
+            1 - result[MetricIdx.SPEC]
+        ]
+        for threshold, result in final_train_result.items()]
+
+    np.savetxt(
+        "train.csv",
+        np.array(final_train_result),
+        delimiter=",",
+        header="THRESHOLD, ACC, SPEC, SEN, MCC, TPR, FPR"
+    )
+
+    final_test_result = [
+        [
+            threshold,
+            result[MetricIdx.ACC],
+            result[MetricIdx.SPEC],
+            result[MetricIdx.SEN],
+            result[MetricIdx.MCC],
+            result[MetricIdx.SEN],
+            1 - result[MetricIdx.SPEC]
+        ]
+        for threshold, result in final_test_result.items()]
+
+    np.savetxt(
+        "test.csv",
+        np.array(final_test_result),
+        delimiter=",",
+        header="THRESHOLD, ACC, SPEC, SEN, MCC, TPR, FPR"
+    )
+
+    return
 
 
 if __name__ == "__main__":
