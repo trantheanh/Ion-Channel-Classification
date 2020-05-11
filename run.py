@@ -21,7 +21,7 @@ flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
 flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
 flags.DEFINE_integer("rnn_layers", 1, "Number of LSTM layer")
 flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
-flags.DEFINE_float("dropout", 0.2, "Dropout rate of last layer")
+flags.DEFINE_float("dropout", 0.1, "Dropout rate of last layer")
 flags.DEFINE_enum("is_tuning", "Y", ["Y", "N"], "running for auto hyper param tuning or specific setting")
 
 
@@ -63,7 +63,7 @@ def main(argv):
     rnn_layers = [1,2,3]
     rnn_units = [32, 64, 128, 256, 512, 1024]
     lr_decay = 0#1e-6
-    dropout = (0.2, 0.5)
+    dropout = (0, 0.5)
 
     hparams = {"threshold": np.random.random(size=(n_experiments,)),
                "dropout": np.random.random(size=(n_experiments,)) * (dropout[1] - dropout[0]) + dropout[0],
