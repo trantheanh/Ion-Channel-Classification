@@ -141,7 +141,8 @@ def k_fold_experiment(config, train_data, test_data):
         train_result, dev_result = train(
             config=config,
             train_ds=train_ds,
-            test_ds=dev_ds
+            test_ds=dev_ds,
+            need_threshold=True
         )
 
         train_results.append(train_result)
