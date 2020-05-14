@@ -9,20 +9,13 @@ from constant.index import DataIdx
 from absl import flags, app
 import datetime
 
-import tensorflow as tf
-from sklearn.model_selection import StratifiedKFold
-import numpy as np
-from tensorboard.plugins.hparams import api as hp
 import os
 import datetime
 
-from models.core import build_model
 from data.dataset import build_train_ds, build_test_ds
 from constant.index import DataIdx, MetricIdx
-from util.log import log_result, write
-from callbacks.core import build_callbacks
-from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity
 from process.core import train
+from data.loader import get_data, get_fold
 
 """# MAIN FUNCTION"""
 
@@ -31,7 +24,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_enum("optimizer", "nadam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
 # flags.DEFINE_integer("batch_size", 1, "Batch size of traning data")
 flags.DEFINE_integer("batch_size", 1024, "Batch size of traning data")
-# flags.DEFINE_float("learning_rate", 0.00016280409164167792, "learning rate of optimizer")
+flags.DEFINE_float("learning_rate", 0.00016280409164167792, "learning rate of optimizer")
 # flags.DEFINE_integer("n_epoch", 100, "Number of training epoch")
 flags.DEFINE_integer("n_epoch", 1, "Number of training epoch")
 flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
@@ -77,20 +70,24 @@ def main(argv):
     hparams = config["hparams"]
     n_fold = config["n_fold"]
 
+    folds_data, test_data = get_data(n_fold)
+
     for fold_index in range(n_fold):
         print("FOLD: {}".format(fold_index + 1))
 
+        train_data, dev_data = get_fold(folds_data, fold_index)
+
         train_ds = build_train_ds(
-            mlp_x=train_data[DataIdx.MLP_FEATURE][train_indexes],
-            rnn_x=train_data[DataIdx.RNN_FEATURE][train_indexes],
-            y=train_data[DataIdx.LABEL][train_indexes],
+            mlp_x=train_data[DataIdx.MLP_FEATURE],
+            rnn_x=train_data[DataIdx.RNN_FEATURE],
+            y=train_data[DataIdx.LABEL],
             hparams=hparams
         )
 
         dev_ds = build_test_ds(
-            mlp_x=train_data[DataIdx.MLP_FEATURE][dev_indexes],
-            rnn_x=train_data[DataIdx.RNN_FEATURE][dev_indexes],
-            y=train_data[DataIdx.LABEL][dev_indexes]
+            mlp_x=dev_data[DataIdx.MLP_FEATURE],
+            rnn_x=dev_data[DataIdx.RNN_FEATURE],
+            y=dev_data[DataIdx.LABEL]
         )
 
         train_result, dev_result = train(
@@ -100,45 +97,9 @@ def main(argv):
             need_threshold=True
         )
 
-        train_result = [
-            [
-                threshold,
-                result[MetricIdx.ACC],
-                result[MetricIdx.SPEC],
-                result[MetricIdx.SEN],
-                result[MetricIdx.MCC],
-                result[MetricIdx.SEN],
-                1 - result[MetricIdx.SPEC]
-            ]
-            for threshold, result in train_result.items()]
-
-        np.savetxt(
-            "fold_{}_train.csv".format(fold_index+1),
-            np.array(train_result),
-            delimiter=",",
-            header="THRESHOLD, ACC, SPEC, SEN, MCC, TPR, FPR"
-        )
-
-        dev_result = [
-            [
-                threshold,
-                result[MetricIdx.ACC],
-                result[MetricIdx.SPEC],
-                result[MetricIdx.SEN],
-                result[MetricIdx.MCC],
-                result[MetricIdx.SEN],
-                1 - result[MetricIdx.SPEC]
-            ]
-            for threshold, result in dev_result.items()]
-
-        np.savetxt(
-            "fold_{}_dev.csv".format(fold_index + 1),
-            np.array(dev_result),
-            delimiter=",",
-            header="THRESHOLD, ACC, SPEC, SEN, MCC, TPR, FPR"
-        )
-
     # Train on all & evaluate on test set
+    train_data = get_fold(folds_data)
+
     train_ds = build_train_ds(
         mlp_x=train_data[DataIdx.MLP_FEATURE],
         rnn_x=train_data[DataIdx.RNN_FEATURE],
@@ -157,44 +118,6 @@ def main(argv):
         train_ds=train_ds,
         test_ds=test_ds,
         need_threshold=True
-    )
-
-    final_train_result = [
-        [
-            threshold,
-            result[MetricIdx.ACC],
-            result[MetricIdx.SPEC],
-            result[MetricIdx.SEN],
-            result[MetricIdx.MCC],
-            result[MetricIdx.SEN],
-            1 - result[MetricIdx.SPEC]
-        ]
-        for threshold, result in final_train_result.items()]
-
-    np.savetxt(
-        "train.csv",
-        np.array(final_train_result),
-        delimiter=",",
-        header="THRESHOLD, ACC, SPEC, SEN, MCC, TPR, FPR"
-    )
-
-    final_test_result = [
-        [
-            threshold,
-            result[MetricIdx.ACC],
-            result[MetricIdx.SPEC],
-            result[MetricIdx.SEN],
-            result[MetricIdx.MCC],
-            result[MetricIdx.SEN],
-            1 - result[MetricIdx.SPEC]
-        ]
-        for threshold, result in final_test_result.items()]
-
-    np.savetxt(
-        "test.csv",
-        np.array(final_test_result),
-        delimiter=",",
-        header="THRESHOLD, ACC, SPEC, SEN, MCC, TPR, FPR"
     )
 
     return

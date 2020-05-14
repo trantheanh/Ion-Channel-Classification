@@ -1,16 +1,14 @@
-import tensorflow as tf
-from sklearn.model_selection import StratifiedKFold
 import numpy as np
-from tensorboard.plugins.hparams import api as hp
 import os
 import datetime
 
-from models.core import build_model
+from models import build_model
 from data.dataset import build_train_ds, build_test_ds
 from constant.index import DataIdx, MetricIdx
 from util.log import log_result, write
 from callbacks.core import build_callbacks
 from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity
+from data.loader import get_fold, get_data
 
 
 """# Build single training process"""
@@ -92,7 +90,8 @@ def get_best_threshold(results):
     return best_threshold
 
 
-def avg_evaluate(all_results, n_fold):
+def avg_evaluate(all_results):
+    n_fold = len(all_results)
     final_result = {}
     if len(all_results) > 0:
         for threshold, result in all_results[0].items():
@@ -108,47 +107,42 @@ def avg_evaluate(all_results, n_fold):
 """# Build k-fold training process"""
 
 
-def k_fold_experiment(config, train_data, test_data):
+def k_fold_experiment(config, folds_data, test_data):
     hparams = config["hparams"]
     n_fold = config["n_fold"]
 
-    # Train on K-fold
-    folds = StratifiedKFold(
-        n_splits=n_fold,
-        shuffle=True,
-        random_state=0
-    ).split(train_data[DataIdx.MLP_FEATURE], train_data[DataIdx.LABEL])
-
     train_results = []
     dev_results = []
-    for fold_index, fold in enumerate(folds):
+    train_data = get_fold(folds_data=folds_data)
+    for fold_index in range(len(folds_data)):
         print("FOLD: {}".format(fold_index + 1))
-        train_indexes, dev_indexes = fold
+        fold_data, dev_data = get_fold(folds_data, fold_index)
 
         train_ds = build_train_ds(
-            mlp_x=train_data[DataIdx.MLP_FEATURE][train_indexes],
-            rnn_x=train_data[DataIdx.RNN_FEATURE][train_indexes],
-            y=train_data[DataIdx.LABEL][train_indexes],
+            mlp_x=fold_data[DataIdx.MLP_FEATURE],
+            rnn_x=fold_data[DataIdx.RNN_FEATURE],
+            y=fold_data[DataIdx.LABEL],
             hparams=hparams
         )
 
         dev_ds = build_test_ds(
-            mlp_x=train_data[DataIdx.MLP_FEATURE][dev_indexes],
-            rnn_x=train_data[DataIdx.RNN_FEATURE][dev_indexes],
-            y=train_data[DataIdx.LABEL][dev_indexes]
+            mlp_x=dev_data[DataIdx.MLP_FEATURE],
+            rnn_x=dev_data[DataIdx.RNN_FEATURE],
+            y=dev_data[DataIdx.LABEL]
         )
 
         train_result, dev_result = train(
             config=config,
             train_ds=train_ds,
-            test_ds=dev_ds
+            test_ds=dev_ds,
+            need_threshold=True
         )
 
         train_results.append(train_result)
         dev_results.append(dev_result)
 
-    train_result = avg_evaluate(train_results, n_fold=n_fold)
-    dev_result = avg_evaluate(dev_results, n_fold=n_fold)
+    train_result = avg_evaluate(train_results)
+    dev_result = avg_evaluate(dev_results)
 
     hparams["threshold"] = get_best_threshold(dev_result)
     train_result = train_result[hparams["threshold"]]
@@ -176,13 +170,15 @@ def k_fold_experiment(config, train_data, test_data):
 """# Build Hyperparameter experiment process"""
 
 
-def experiment(configs, train_data, test_data, log_dir):
+def experiment(configs, log_dir):
+    n_fold = 5
+    folds_data, test_data = get_data(n_fold)
     for index, config in enumerate(configs):
         session_log_dir = os.path.join(log_dir, "session_{}".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S")))
         print("\nEXPERIMENT: {}/{}".format(index+1, len(configs)))
         print(config)
         config["log_dir"] = session_log_dir
-        config["n_fold"] = 5
+        config["n_fold"] = n_fold
         config["class_weight"] = {
               0: 1,
               1: 1
@@ -190,7 +186,7 @@ def experiment(configs, train_data, test_data, log_dir):
         config["verbose"] = 2
         train_result, dev_result, test_result = k_fold_experiment(
             config=config,
-            train_data=train_data,
+            folds_data=folds_data,
             test_data=test_data
         )
 

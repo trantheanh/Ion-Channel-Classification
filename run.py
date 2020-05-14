@@ -13,15 +13,20 @@ from absl import flags, app
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_enum("optimizer", "nadam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
-flags.DEFINE_integer("batch_size", 1, "Batch size of traning data")
-flags.DEFINE_float("learning_rate", 0.00016280409164167792, "learning rate of optimizer")
-flags.DEFINE_integer("n_epoch", 100, "Number of training epoch")
-flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
-flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
-flags.DEFINE_integer("rnn_layers", 1, "Number of LSTM layer")
-flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
 flags.DEFINE_enum("is_tuning", "Y", ["Y", "N"], "running for auto hyper param tuning or specific setting")
+
+flags.DEFINE_enum("optimizer", "nadam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
+# flags.DEFINE_integer("batch_size", 1, "Batch size of traning data")
+flags.DEFINE_integer("batch_size", 1024, "Batch size of traning data")
+flags.DEFINE_float("learning_rate", 0.00016280409164167792, "learning rate of optimizer")
+# flags.DEFINE_integer("n_epoch", 100, "Number of training epoch")
+flags.DEFINE_integer("n_epoch", 1, "Number of training epoch")
+flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
+# flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
+flags.DEFINE_integer("maxout_units", 1, "Number of maxout units")
+flags.DEFINE_integer("rnn_layers", 1, "Number of LSTM layer")
+# flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
+flags.DEFINE_integer("rnn_units", 1, "Number of RNN units")
 
 
 def main(argv):
@@ -95,8 +100,6 @@ def main(argv):
     if FLAGS.is_tuning == "Y":
         experiment(
           configs=configs,
-          train_data=train_data,
-          test_data=test_data,
           log_dir=log_dir
         )
     else:
@@ -117,8 +120,6 @@ def main(argv):
 
         experiment(
             configs=[config],
-            train_data=train_data,
-            test_data=test_data,
             log_dir=log_dir
         )
 

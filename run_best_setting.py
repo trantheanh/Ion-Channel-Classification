@@ -9,19 +9,13 @@ from constant.index import DataIdx
 from absl import flags, app
 import datetime
 
-import tensorflow as tf
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
-from tensorboard.plugins.hparams import api as hp
 import os
 import datetime
 
-from models.core import build_model
 from data.dataset import build_train_ds, build_test_ds
 from constant.index import DataIdx, MetricIdx
-from util.log import log_result, write
-from callbacks.core import build_callbacks
-from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity
 from process.core import train
 
 """# MAIN FUNCTION"""

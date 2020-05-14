@@ -4,30 +4,29 @@ import numpy as np
 import os
 import shutil
 from sklearn.model_selection import StratifiedKFold
+from resource import RESOURCE_PATH
 from constant.url import DataPath
-from data import DATA_PATH
 
 
-working_data_folder = "working_data"
-fold_name = "fold_{}.csv"
-train_name = "train.csv"
-test_name = "test.csv"
+train_path = os.path.join(RESOURCE_PATH, DataPath.train_file_name)
+test_path = os.path.join(RESOURCE_PATH, DataPath.test_file_name)
+fold_path = os.path.join(RESOURCE_PATH, "fold_{}.csv")
 
 
 """# Get data from Google Drive"""
 
 
 def download_file_from_drive_id(id, destination):
-    URL = "https://docs.google.com/uc?export=download"
+    url = "https://docs.google.com/uc?export=download"
 
     session = requests.Session()
 
-    response = session.get(URL, params = { 'id' : id }, stream = True)
+    response = session.get(url, params={'id': id}, stream=True)
     token = get_confirm_token(response)
 
     if token:
-        params = { 'id' : id, 'confirm' : token }
-        response = session.get(URL, params = params, stream = True)
+        params = {'id': id, 'confirm': token}
+        response = session.get(url, params=params, stream=True)
 
     save_response_content(response, destination)
 
@@ -41,11 +40,11 @@ def get_confirm_token(response):
 
 
 def save_response_content(response, destination):
-    CHUNK_SIZE = 32768
+    chunk_size = 32768
 
     with open(destination, "wb") as f:
-        for chunk in response.iter_content(CHUNK_SIZE):
-            if chunk: # filter out keep-alive new chunks
+        for chunk in response.iter_content(chunk_size):
+            if chunk:
                 f.write(chunk)
 
 
@@ -58,31 +57,21 @@ def download_from_shareable_link(url, destination):
 
 
 def parse_csv_data(path):
-  data = pd.read_csv(path).values
-  mlp_input = data[:, :30]
-  rnn_input = np.stack([data[:, (30+i*20):(30+(i+1)*20)] for i in range(15)], axis=1)
-  label = data[:, 330]
-  return mlp_input, rnn_input, label
+    data = pd.read_csv(path).values
+
+    return parse_data(data)
+
+
+def parse_data(data):
+    mlp_input = data[:, :30]
+    rnn_input = np.stack([data[:, (30 + i * 20):(30 + (i + 1) * 20)] for i in range(15)], axis=1)
+    label = data[:, 330]
+    return mlp_input, rnn_input, label
 
 
 def split_k_fold(n_fold=5):
-    tmp_folder = "tmp"
-    # Remove Old working data folder
-    if os.path.isdir(os.path.join(DATA_PATH)):
-        shutil.rmtree(os.path.join(DATA_PATH))
-
-    # Create tmp folder
-    if not os.path.isdir(tmp_folder):
-        os.mkdir(tmp_folder)
-
-    target_train_path = os.path.join(tmp_folder, "train_data.csv")
-    target_test_path = os.path.join(tmp_folder, "test_data.csv")
-
-    download_from_shareable_link(url=DataPath.train_data_path, destination=target_train_path)
-    download_from_shareable_link(url=DataPath.test_data_path, destination=target_test_path)
-
-    train_data = pd.read_csv(target_train_path).values
-    test_data = pd.read_csv(target_train_path).values
+    print("START SPLIT DATA TO {} FOLD".format(n_fold))
+    train_data = pd.read_csv(train_path).values
 
     folds = StratifiedKFold(
         n_splits=n_fold,
@@ -97,32 +86,44 @@ def split_k_fold(n_fold=5):
         folds_data[fold_index] = train_data[dev_indexes]
 
     # Save folds to CSV file
-    if not os.path.isdir(os.path.join(DATA_PATH, working_data_folder)):
-        os.mkdir(os.path.join(DATA_PATH, working_data_folder))
-
     for i in range(n_fold):
-        np.savetxt(os.path.join(
-            DATA_PATH,
-            working_data_folder,
-            fold_name.format(i+1)),
-            folds_data[i], delimiter=",")
-
-    np.savetxt(os.path.join(DATA_PATH, working_data_folder, train_name), train_data, delimiter=",")
-    np.savetxt(os.path.join(DATA_PATH, working_data_folder, test_name), test_data, delimiter=",")
-
-    # Remove tmp folder
-    if os.path.isdir(tmp_folder):
-        shutil.rmtree(tmp_folder)
+        np.savetxt(
+            fold_path.format(i),
+            folds_data[i],
+            delimiter=","
+        )
 
     return
 
 
-def get_data(fold_index, n_fold):
-    if os.path.isdir(os.path.join(DATA_PATH, working_data_folder)) \
-            and os.path.isfile(os.path.join(DATA_PATH, working_data_folder, fold_name.format(fold_index))):
-        return os.path.join(DATA_PATH, working_data_folder, fold_name.format(fold_index))
-    else:
-        split_k_fold(n_fold=n_fold)
+def get_data(n_fold):
+    for i in range(n_fold):
+        if not os.path.isfile(fold_path.format(i)):
+            split_k_fold(n_fold)
+            break
+
+    folds_data = []
+    for i in range(n_fold):
+        data = pd.read_csv(fold_path.format(i)).values
+        folds_data.append(data)
+
+    test_data = parse_csv_data(test_path)
+
+    return folds_data, test_data
+
+
+def get_fold(folds_data, fold_index=-1):
+    train_data = np.concatenate([folds_data[i] for i in range(len(folds_data)) if i != fold_index])
+    train_data = parse_data(train_data)
+
+    if fold_index < 0:
+        return train_data
+
+    dev_data = folds_data[fold_index]
+    dev_data = parse_data(dev_data)
+    return train_data, dev_data
+
+
 
 
 
