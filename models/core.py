@@ -112,9 +112,9 @@ def build_lstm_conv(hparams):
 
     rnn_imd = rnn_input
     rnn_imd = layers.Conv1D(
-        filters=hparams["conv1D_depth"],
-        kernel_size=hparams["conv1D_size"],
-        strides=hparams["conv1D_stride"],
+        filters=hparams["conv1d_depth"],
+        kernel_size=hparams["conv1d_size"],
+        strides=hparams["conv1d_stride"],
         padding='SAME',
         activation="relu"
     )(rnn_imd)
