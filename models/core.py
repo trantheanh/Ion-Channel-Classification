@@ -116,7 +116,7 @@ def build_lstm_conv(hparams):
         kernel_size=hparams["conv1d_size"],
         strides=hparams["conv1d_stride"],
         padding='SAME',
-        # activation="relu"
+        activation="relu"
     )(rnn_imd)
     for i in range(hparams["rnn_layers"]):
         rnn_imd = layers.LSTM(

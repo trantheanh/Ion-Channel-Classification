@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import tensorflow as tf
 
 import os
 
@@ -11,6 +12,8 @@ from absl import flags, app
 """# MAIN FUNCTION"""
 
 FLAGS = flags.FLAGS
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
 
 flags.DEFINE_enum("is_tuning", "Y", ["Y", "N"], "running for auto hyper param tuning or specific setting")
 
