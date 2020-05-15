@@ -12,8 +12,13 @@ from absl import flags, app
 """# MAIN FUNCTION"""
 
 FLAGS = flags.FLAGS
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+  except RuntimeError as e:
+    print(e)
 
 flags.DEFINE_enum("is_tuning", "Y", ["Y", "N"], "running for auto hyper param tuning or specific setting")
 
