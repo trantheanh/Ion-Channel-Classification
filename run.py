@@ -23,17 +23,17 @@ if gpus:
 flags.DEFINE_enum("is_tuning", "Y", ["Y", "N"], "running for auto hyper param tuning or specific setting")
 
 flags.DEFINE_enum("optimizer", "nadam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
-flags.DEFINE_integer("batch_size", 1, "Batch size of traning data")
-# flags.DEFINE_integer("batch_size", 1024, "Batch size of traning data")
+# flags.DEFINE_integer("batch_size", 1, "Batch size of traning data")
+flags.DEFINE_integer("batch_size", 1024, "Batch size of traning data")
 flags.DEFINE_float("learning_rate", 0.00016280409164167792, "learning rate of optimizer")
-# flags.DEFINE_integer("n_epoch", 100, "Number of training epoch")
-flags.DEFINE_integer("n_epoch", 1, "Number of training epoch")
-flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
-# flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
-flags.DEFINE_integer("maxout_units", 1, "Number of maxout units")
+flags.DEFINE_integer("n_epoch", 100, "Number of training epoch")
+# flags.DEFINE_integer("n_epoch", 1, "Number of training epoch")
+# flags.DEFINE_integer("maxout_head", 2, "Number of maxout activation head")
+flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
+# flags.DEFINE_integer("maxout_units", 1, "Number of maxout units")
 flags.DEFINE_integer("rnn_layers", 1, "Number of LSTM layer")
-# flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
-flags.DEFINE_integer("rnn_units", 1, "Number of RNN units")
+flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
+# flags.DEFINE_integer("rnn_units", 1, "Number of RNN units")
 flags.DEFINE_float("dropout", 0.1, "Dropout Rate")
 flags.DEFINE_integer("conv1d_depth", 32, "Number of Conv1D filter")
 flags.DEFINE_integer("conv1d_size", 3, "Window size of Conv1D")
@@ -101,16 +101,33 @@ def main(argv):
         "conv1d_stride": np.array(conv1d_stride)[np.random.randint(low=0, high=len(conv1d_stride), size=(n_experiments,))]
     }
 
+    # configs = [{"hparams": {
+    #     "threshold": 0.5,
+    #     "batch_size": int(hparams["batch_size"][i]),
+    #     "learning_rate": hparams["learning_rate"][i],
+    #     "n_epoch": int(hparams["n_epoch"][i]),
+    #     "optimizer": hparams["optimizer"][i],
+    #     "maxout_head": int(hparams["maxout_head"][i]),
+    #     "maxout_units": int(hparams["maxout_units"][i]),
+    #     "rnn_layers": int(hparams["rnn_layers"][i]),
+    #     "rnn_units": int(hparams["rnn_units"][i]),
+    #     "lr_decay": lr_decay,
+    #     "conv1d_depth": int(hparams["conv1d_depth"][i]),
+    #     "dropout": hparams["dropout"][i],
+    #     "conv1d_size": int(hparams["conv1d_size"][i]),
+    #     "conv1d_stride": int(hparams["conv1d_stride"][i]),
+    # }} for i in range(n_experiments)]
+
     configs = [{"hparams": {
         "threshold": 0.5,
-        "batch_size": int(hparams["batch_size"][i]),
-        "learning_rate": hparams["learning_rate"][i],
-        "n_epoch": int(hparams["n_epoch"][i]),
-        "optimizer": hparams["optimizer"][i],
-        "maxout_head": int(hparams["maxout_head"][i]),
-        "maxout_units": int(hparams["maxout_units"][i]),
-        "rnn_layers": int(hparams["rnn_layers"][i]),
-        "rnn_units": int(hparams["rnn_units"][i]),
+        "batch_size": FLAGS.batch_size,
+        "learning_rate": FLAGS.learning_rate,
+        "n_epoch": FLAGS.n_epoch,
+        "optimizer": FLAGS.optimizer,
+        "maxout_head": FLAGS.maxout_head,
+        "maxout_units": FLAGS.maxout_units,
+        "rnn_layers": FLAGS.rnn_layers,
+        "rnn_units": FLAGS.rnn_units,
         "lr_decay": lr_decay,
         "conv1d_depth": int(hparams["conv1d_depth"][i]),
         "dropout": hparams["dropout"][i],
