@@ -24,7 +24,7 @@ def build_lstm_maxout(hparams):
       rnn_imd = layers.LSTM(
           units=hparams["rnn_units"],
           return_sequences=(i+1 < hparams["rnn_layers"]),
-          activation="sigmoid"
+          # activation="sigmoid"
       )(rnn_imd)
 
     mlp_imd = []
@@ -75,7 +75,7 @@ def build_lstm(hparams):
         rnn_imd = layers.LSTM(
             units=hparams["rnn_units"],
             return_sequences=(i+1 < hparams["rnn_layers"]),
-            activation="sigmoid"
+            # activation="sigmoid"
         )(rnn_imd)
 
     imd = rnn_imd
@@ -122,7 +122,7 @@ def build_lstm_conv(hparams):
         rnn_imd = layers.LSTM(
             units=hparams["rnn_units"],
             return_sequences=(i+1 < hparams["rnn_layers"]),
-            activation="sigmoid"
+            # activation="sigmoid"
         )(rnn_imd)
 
     imd = rnn_imd
@@ -163,7 +163,7 @@ def build_lstm_maxout_dropout(hparams):
       rnn_imd = layers.LSTM(
           units=hparams["rnn_units"],
           return_sequences=(i+1 < hparams["rnn_layers"]),
-          activation="sigmoid"
+          # activation="sigmoid"
       )(rnn_imd)
 
     mlp_imd = []
