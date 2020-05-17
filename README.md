@@ -53,3 +53,4 @@ Sequence Protein is converted to PSSM (length=15, dimentions=20) and CB feature 
 - Data is automatically download from Google Drive (csv file) and parse to PSSM and CB feature respectively
 
 ## 9. Result:
+
