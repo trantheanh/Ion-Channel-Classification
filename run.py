@@ -34,10 +34,10 @@ flags.DEFINE_integer("maxout_units", 128, "Number of maxout units")
 flags.DEFINE_integer("rnn_layers", 1, "Number of LSTM layer")
 flags.DEFINE_integer("rnn_units", 1024, "Number of RNN units")
 # flags.DEFINE_integer("rnn_units", 1, "Number of RNN units")
-flags.DEFINE_float("dropout", 0.1, "Dropout Rate")
-flags.DEFINE_integer("conv1d_depth", 32, "Number of Conv1D filter")
+flags.DEFINE_float("dropout", 0.2, "Dropout Rate")
+flags.DEFINE_integer("conv1d_depth", 64, "Number of Conv1D filter")
 flags.DEFINE_integer("conv1d_size", 3, "Window size of Conv1D")
-flags.DEFINE_integer("conv1d_stride", 2, "Stride of Conv1D")
+flags.DEFINE_integer("conv1d_stride", 1, "Stride of Conv1D")
 
 
 def main(argv):
@@ -63,7 +63,7 @@ def main(argv):
 
     log_dir = os.path.join(os.getcwd(),"log", "hparam_tuning")
 
-    n_experiments = 1000
+    n_experiments = 1#1000
 
     batch_size = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
     #batch_size = [1, 2, 4, 8, 16, 32]
@@ -129,10 +129,10 @@ def main(argv):
         "rnn_layers": FLAGS.rnn_layers,
         "rnn_units": FLAGS.rnn_units,
         "lr_decay": lr_decay,
-        "conv1d_depth": int(hparams["conv1d_depth"][i]),
-        "dropout": hparams["dropout"][i],
-        "conv1d_size": int(hparams["conv1d_size"][i]),
-        "conv1d_stride": int(hparams["conv1d_stride"][i]),
+        "conv1d_depth": FLAGS.conv1d_depth,
+        "dropout": FLAGS.dropout,
+        "conv1d_size": FLAGS.conv1d_size,
+        "conv1d_stride": FLAGS.conv1d_stride
     }} for i in range(n_experiments)]
 
     if FLAGS.is_tuning == "Y":
