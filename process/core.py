@@ -14,7 +14,7 @@ from data.loader import get_fold, get_data
 """# Build single training process"""
 
 
-def train(config, train_ds, test_ds, need_summary=False, need_threshold=True):
+def train(config, train_ds, test_ds, need_summary=False, need_threshold=True, need_save=False, is_final=False):
     hparams = config["hparams"]
     n_epoch = hparams["n_epoch"]
     class_weight = config["class_weight"]
@@ -35,6 +35,12 @@ def train(config, train_ds, test_ds, need_summary=False, need_threshold=True):
         shuffle=True,
         callbacks=callbacks
     )
+
+    if need_save:
+        if is_final:
+            model.save("final_model.h5")
+        else:
+            model.save("{}.h5".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     if need_threshold:
         train_result = evaluate(model, train_ds)
@@ -135,7 +141,9 @@ def k_fold_experiment(config, folds_data, test_data):
             config=config,
             train_ds=train_ds,
             test_ds=dev_ds,
-            need_threshold=True
+            need_threshold=True,
+            need_save=True,
+            is_final=False
         )
 
         train_results.append(train_result)
@@ -162,7 +170,14 @@ def k_fold_experiment(config, folds_data, test_data):
         y=test_data[DataIdx.LABEL]
     )
 
-    _, test_result = train(config=config, train_ds=train_ds, test_ds=test_ds, need_summary=True)
+    _, test_result = train(
+        config=config,
+        train_ds=train_ds,
+        test_ds=test_ds,
+        need_summary=True,
+        need_save=True,
+        is_final=True
+    )
     test_result = test_result[hparams["threshold"]]
     return train_result, dev_result, test_result
 
