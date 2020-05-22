@@ -40,6 +40,7 @@ flags.DEFINE_integer("conv1d_size", 3, "Window size of Conv1D")
 flags.DEFINE_integer("conv1d_stride", 1, "Stride of Conv1D")
 
 
+
 def main(argv):
     train_data_path = "https://drive.google.com/open?id=1EJ0VcOmKUUOpSQ4dDkhbhVzvbIjz-Wg5"
     test_data_path = "https://drive.google.com/open?id=14Xo1zxFKHrus1KPxmVJe-D0S8Px9OIlX"
