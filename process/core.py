@@ -9,6 +9,7 @@ from util.log import log_result, write
 from callbacks.core import build_callbacks
 from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity
 from data.loader import get_fold, get_data
+from saved_model import SAVED_MODEL_PATH
 
 
 """# Build single training process"""
@@ -38,9 +39,13 @@ def train(config, train_ds, test_ds, need_summary=False, need_threshold=True, ne
 
     if need_save:
         if is_final:
-            model.save("saved_model/final_model.h5")
+            model.save(os.path.join(SAVED_MODEL_PATH, "{}_final_model.h5".format(
+                datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            )))
         else:
-            model.save("saved_model/{}.h5".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S")))
+            model.save(os.path.join(SAVED_MODEL_PATH, "{}.h5".format(
+                datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            )))
 
     if need_threshold:
         train_result = evaluate(model, train_ds)
