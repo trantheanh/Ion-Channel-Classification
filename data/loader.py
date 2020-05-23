@@ -69,6 +69,18 @@ def parse_data(data):
     return mlp_input, rnn_input, label
 
 
+def normalize(data, mean, std):
+    mlp_input, rnn_input, label = data
+    if mean is None:
+        mean = np.mean(rnn_input, axis=0)
+
+    if std is None:
+        std = np.std(rnn_input, axis=0)
+
+    rnn_input = (rnn_input - mean) / std
+    return mlp_input, rnn_input, label
+
+
 def split_k_fold(n_fold=5):
     print("START SPLIT DATA TO {} FOLD".format(n_fold))
     train_data = pd.read_csv(train_path).values
