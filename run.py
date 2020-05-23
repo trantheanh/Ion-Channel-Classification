@@ -106,7 +106,7 @@ def main(argv):
         "threshold": 0.5,
         "batch_size": int(hparams["batch_size"][i]),
         "learning_rate": hparams["learning_rate"][i],
-        "n_epoch": 1#int(hparams["n_epoch"][i]),
+        "n_epoch": 1,#int(hparams["n_epoch"][i]),
         "optimizer": hparams["optimizer"][i],
         "maxout_head": int(hparams["maxout_head"][i]),
         "maxout_units": int(hparams["maxout_units"][i]),
