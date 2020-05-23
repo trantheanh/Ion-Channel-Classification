@@ -40,7 +40,6 @@ flags.DEFINE_integer("conv1d_size", 3, "Window size of Conv1D")
 flags.DEFINE_integer("conv1d_stride", 1, "Stride of Conv1D")
 
 
-
 def main(argv):
     train_data_path = "https://drive.google.com/open?id=1EJ0VcOmKUUOpSQ4dDkhbhVzvbIjz-Wg5"
     test_data_path = "https://drive.google.com/open?id=14Xo1zxFKHrus1KPxmVJe-D0S8Px9OIlX"
@@ -64,18 +63,19 @@ def main(argv):
 
     log_dir = os.path.join(os.getcwd(),"log", "hparam_tuning")
 
-    n_experiments = 1#1000
+    n_experiments = 1000
 
     batch_size = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
     #batch_size = [1, 2, 4, 8, 16, 32]
     learning_rate = (0.0001, 0.5)
-    n_epoch = (20, 120)
+    n_epoch = (20, 100)
     optimizer = ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"]
-    maxout_head = [1,2,3,4]
+    maxout_head = [1, 2, 3, 4]
     maxout_units = [32, 64, 128, 256, 512, 1024]
-    rnn_layers = [1,2,3]
-    rnn_units = [32, 64, 128, 256, 512, 1024]
-    lr_decay = 0#1e-6
+    rnn_layers = [1, 2, 3]
+    rnn_units = [32, 64, 128, 256, 512]
+    # rnn_units = [32, 64, 128, 256, 512, 1024]
+    lr_decay = 1e-6
     conv1d_depth = [8, 16, 32, 64]
     conv1d_size = [2, 3, 4]
     conv1d_stride = [1, 2, 3]
@@ -102,39 +102,39 @@ def main(argv):
         "conv1d_stride": np.array(conv1d_stride)[np.random.randint(low=0, high=len(conv1d_stride), size=(n_experiments,))]
     }
 
-    # configs = [{"hparams": {
-    #     "threshold": 0.5,
-    #     "batch_size": int(hparams["batch_size"][i]),
-    #     "learning_rate": hparams["learning_rate"][i],
-    #     "n_epoch": int(hparams["n_epoch"][i]),
-    #     "optimizer": hparams["optimizer"][i],
-    #     "maxout_head": int(hparams["maxout_head"][i]),
-    #     "maxout_units": int(hparams["maxout_units"][i]),
-    #     "rnn_layers": int(hparams["rnn_layers"][i]),
-    #     "rnn_units": int(hparams["rnn_units"][i]),
-    #     "lr_decay": lr_decay,
-    #     "conv1d_depth": int(hparams["conv1d_depth"][i]),
-    #     "dropout": hparams["dropout"][i],
-    #     "conv1d_size": int(hparams["conv1d_size"][i]),
-    #     "conv1d_stride": int(hparams["conv1d_stride"][i]),
-    # }} for i in range(n_experiments)]
-
     configs = [{"hparams": {
         "threshold": 0.5,
-        "batch_size": FLAGS.batch_size,
-        "learning_rate": FLAGS.learning_rate,
-        "n_epoch": FLAGS.n_epoch,
-        "optimizer": FLAGS.optimizer,
-        "maxout_head": FLAGS.maxout_head,
-        "maxout_units": FLAGS.maxout_units,
-        "rnn_layers": FLAGS.rnn_layers,
-        "rnn_units": FLAGS.rnn_units,
+        "batch_size": int(hparams["batch_size"][i]),
+        "learning_rate": hparams["learning_rate"][i],
+        "n_epoch": 1#int(hparams["n_epoch"][i]),
+        "optimizer": hparams["optimizer"][i],
+        "maxout_head": int(hparams["maxout_head"][i]),
+        "maxout_units": int(hparams["maxout_units"][i]),
+        "rnn_layers": int(hparams["rnn_layers"][i]),
+        "rnn_units": int(hparams["rnn_units"][i]),
         "lr_decay": lr_decay,
-        "conv1d_depth": FLAGS.conv1d_depth,
-        "dropout": FLAGS.dropout,
-        "conv1d_size": FLAGS.conv1d_size,
-        "conv1d_stride": FLAGS.conv1d_stride
+        "conv1d_depth": int(hparams["conv1d_depth"][i]),
+        "dropout": hparams["dropout"][i],
+        "conv1d_size": int(hparams["conv1d_size"][i]),
+        "conv1d_stride": int(hparams["conv1d_stride"][i]),
     }} for i in range(n_experiments)]
+
+    # configs = [{"hparams": {
+    #     "threshold": 0.5,
+    #     "batch_size": FLAGS.batch_size,
+    #     "learning_rate": FLAGS.learning_rate,
+    #     "n_epoch": FLAGS.n_epoch,
+    #     "optimizer": FLAGS.optimizer,
+    #     "maxout_head": FLAGS.maxout_head,
+    #     "maxout_units": FLAGS.maxout_units,
+    #     "rnn_layers": FLAGS.rnn_layers,
+    #     "rnn_units": FLAGS.rnn_units,
+    #     "lr_decay": lr_decay,
+    #     "conv1d_depth": FLAGS.conv1d_depth,
+    #     "dropout": FLAGS.dropout,
+    #     "conv1d_size": FLAGS.conv1d_size,
+    #     "conv1d_stride": FLAGS.conv1d_stride
+    # }} for i in range(n_experiments)]
 
     if FLAGS.is_tuning == "Y":
         experiment(

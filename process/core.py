@@ -39,7 +39,8 @@ def train(config, train_ds, test_ds, need_summary=False, need_threshold=True, ne
 
     if need_save:
         if is_final:
-            model.save(os.path.join(SAVED_MODEL_PATH, "{}_final_model.h5".format(
+            model.save(os.path.join(SAVED_MODEL_PATH, "{}_{}_final_model.h5".format(
+                config["log_dir"].split("/")[-1],
                 datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             )))
         else:
@@ -201,7 +202,7 @@ def experiment(configs, log_dir):
         config["n_fold"] = n_fold
         config["class_weight"] = {
               0: 1,
-              1: 20
+              1: 1
         }
         config["verbose"] = 2
         train_result, dev_result, test_result = k_fold_experiment(

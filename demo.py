@@ -7,7 +7,7 @@ import numpy as np
 import os
 from saved_model import SAVED_MODEL_PATH
 
-threshold = 0.00000001
+threshold = 0.00001
 
 folds_data, test_data = loader.get_data(5)
 # extra_train_data = loader.parse_csv_data("resource/Added.Neg.Sample.Train.csv")
@@ -28,8 +28,8 @@ for i in range(5):
 	# ))
 
 	model: keras.models.Model = keras.models.load_model(
-		os.path.join(SAVED_MODEL_PATH, "20200523-101346.h5"),
-		# "saved_model/f{}.h5".format(i+1),
+		# os.path.join(SAVED_MODEL_PATH, "20200523-101346.h5"),
+		os.path.join(SAVED_MODEL_PATH, "f{}.h5".format(i+1)),
 		compile=False
 	)
 
