@@ -69,7 +69,7 @@ def parse_data(data):
     return mlp_input, rnn_input, label
 
 
-def normalize(data, mean, std):
+def normalize(data, mean=None, std=None):
     mlp_input, rnn_input, label = data
     if mean is None:
         mean = np.mean(rnn_input, axis=0)
