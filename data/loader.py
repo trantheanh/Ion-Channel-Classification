@@ -78,7 +78,7 @@ def normalize(data, mean, std):
         std = np.std(rnn_input, axis=0)
 
     rnn_input = (rnn_input - mean) / std
-    return mlp_input, rnn_input, label
+    return (mlp_input, rnn_input, label), mean, std
 
 
 def split_k_fold(n_fold=5):
@@ -133,7 +133,14 @@ def get_fold(folds_data, fold_index=-1):
 
     dev_data = folds_data[fold_index]
     dev_data = parse_data(dev_data)
+
     return train_data, dev_data
+
+
+def preprocess_data(train_data, test_data):
+    train_data, mean, std = normalize(train_data)
+    test_data, _, _ = normalize(test_data, mean, std)
+    return train_data, test_data
 
 
 

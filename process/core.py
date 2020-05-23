@@ -8,7 +8,7 @@ from constant.index import DataIdx, MetricIdx
 from util.log import log_result, write
 from callbacks.core import build_callbacks
 from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity
-from data.loader import get_fold, get_data
+from data.loader import get_fold, get_data, preprocess_data
 from saved_model import SAVED_MODEL_PATH
 
 
@@ -126,9 +126,11 @@ def k_fold_experiment(config, folds_data, test_data):
     train_results = []
     dev_results = []
     train_data = get_fold(folds_data=folds_data)
+    train_data, test_data = preprocess_data(train_data, test_data)
     for fold_index in range(len(folds_data)):
         print("FOLD: {}".format(fold_index + 1))
         fold_data, dev_data = get_fold(folds_data, fold_index)
+        fold_data, dev_data = preprocess_data(fold_data, dev_data)
 
         train_ds = build_train_ds(
             mlp_x=fold_data[DataIdx.MLP_FEATURE],
