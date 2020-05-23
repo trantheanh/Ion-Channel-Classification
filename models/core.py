@@ -166,16 +166,18 @@ def build_lstm_maxout_dropout(hparams):
           # activation="sigmoid"
       )(rnn_imd)
 
-    mlp_imd = []
-    for i in range(hparams["maxout_head"]):
-        mlp_imd.append(layers.Dense(units=hparams["maxout_units"])(mlp_input))
+    # mlp_imd = []
+    # for i in range(hparams["maxout_head"]):
+    #     mlp_imd.append(layers.Dense(units=hparams["maxout_units"])(mlp_input))
 
-    if hparams["maxout_head"] > 1:
-        mlp_imd = layers.Maximum()(mlp_imd)
-    elif hparams["maxout_head"] == 1:
-        mlp_imd = layers.Activation(activation="relu")(mlp_imd[0])
-    else:
-        mlp_imd = mlp_input
+    # if hparams["maxout_head"] > 1:
+    #     mlp_imd = layers.Maximum()(mlp_imd)
+    # elif hparams["maxout_head"] == 1:
+    #     mlp_imd = layers.Activation(activation="relu")(mlp_imd[0])
+    # else:
+    #     mlp_imd = mlp_input
+
+    mlp_imd = layers.Dense(units=hparams["maxout_units"], activation="tanh")(mlp_input)
 
     imd = layers.Concatenate(axis=-1)([rnn_imd, mlp_imd])
     imd = layers.Dropout(rate=hparams["dropout"])(imd)
