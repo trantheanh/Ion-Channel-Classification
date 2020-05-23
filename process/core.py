@@ -120,6 +120,7 @@ def avg_evaluate(all_results):
 
 
 def k_fold_experiment(config, folds_data, test_data):
+    print(config)
     hparams = config["hparams"]
     n_fold = config["n_fold"]
 
@@ -206,7 +207,7 @@ def experiment(configs, log_dir):
               0: 1,
               1: 1
         }
-        config["verbose"] = 2
+        config["verbose"] = 0
         train_result, dev_result, test_result = k_fold_experiment(
             config=config,
             folds_data=folds_data,
