@@ -201,7 +201,7 @@ def experiment(configs, log_dir):
         config["n_fold"] = n_fold
         config["class_weight"] = {
               0: 1,
-              1: 1
+              1: 20
         }
         config["verbose"] = 2
         train_result, dev_result, test_result = k_fold_experiment(
