@@ -195,7 +195,7 @@ def build_lstm_maxout_dropout(hparams):
           learning_rate=hparams["learning_rate"],
           decay=hparams["lr_decay"]
       ),
-      loss=keras.losses.binary_crossentropy,
+      loss=flood_loss,#keras.losses.binary_crossentropy,
       metrics=[
         BinaryAccuracy(hparams["threshold"]),
         BinaryMCC(hparams["threshold"]),
