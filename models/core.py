@@ -5,10 +5,12 @@ from optimizers.core import build_optimizer
 from metrics.core import BinarySpecificity, BinarySensitivity, BinaryMCC, BinaryAccuracy
 
 
-def flood_loss(y_true, y_pred, b=0.05):
-    loss = keras.losses.binary_crossentropy(y_true, y_pred)
-    loss = keras.backend.abs(loss - b) + b
-    return loss
+def flood_loss(b=0.05):
+    def get_loss(y_true, y_pred):
+        loss = keras.losses.binary_crossentropy(y_true, y_pred)
+        loss = keras.backend.abs(loss - b) + b
+        return loss
+    return get_loss
 
 
 """# Build model"""
@@ -195,7 +197,7 @@ def build_lstm_maxout_dropout(hparams):
           learning_rate=hparams["learning_rate"],
           decay=hparams["lr_decay"]
       ),
-      loss=flood_loss,#keras.losses.binary_crossentropy,
+      loss=flood_loss(hparams["flood_loss_coef"]),#keras.losses.binary_crossentropy,
       metrics=[
         BinaryAccuracy(hparams["threshold"]),
         BinaryMCC(hparams["threshold"]),
