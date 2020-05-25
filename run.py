@@ -65,22 +65,22 @@ def main(argv):
 
     n_experiments = 1000
 
-    batch_size = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
-    #batch_size = [1, 2, 4, 8, 16, 32]
+    # batch_size = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+    batch_size = [1, 2, 4, 8, 16, 32]
     learning_rate = (0.0001, 0.5)
-    n_epoch = (20, 100)
+    n_epoch = (60, 100)
     optimizer = ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"]
     maxout_head = [1, 2, 3, 4]
     maxout_units = [32, 64, 128, 256, 512, 1024]
     rnn_layers = [1, 2, 3]
-    rnn_units = [32, 64, 128, 256, 512]
-    # rnn_units = [32, 64, 128, 256, 512, 1024]
+    # rnn_units = [32, 64, 128, 256, 512]
+    rnn_units = [128, 256, 512]
     lr_decay = 1e-6
     conv1d_depth = [8, 16, 32, 64]
     conv1d_size = [2, 3, 4]
     conv1d_stride = [1, 2, 3]
     dropout = (0, 0.3)
-    flood_loss_coef = (0, 0.2)
+    flood_loss_coef = (0.1, 0.2)
 
     hparams = {
         "threshold": np.random.random(size=(n_experiments,)),
