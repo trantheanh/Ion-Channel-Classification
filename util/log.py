@@ -38,3 +38,4 @@ def write(log_dir, ds_name, result, hparams):
         tf.summary.scalar(name="{}_mcc".format(ds_name), data=result[MetricIdx.MCC], step=1)
         tf.summary.scalar(name="{}_sen".format(ds_name), data=result[MetricIdx.SEN], step=1)
         tf.summary.scalar(name="{}_spec".format(ds_name), data=result[MetricIdx.SPEC], step=1)
+        tf.summary.scalar(name="{}_f1".format(ds_name), data=result[MetricIdx.F1], step=1)
