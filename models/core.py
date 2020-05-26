@@ -3,6 +3,7 @@ import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 from optimizers.core import build_optimizer
 from metrics.core import BinarySpecificity, BinarySensitivity, BinaryMCC, BinaryAccuracy, BinaryF1Score
+from constant.shape import InputShape
 
 
 def flood_loss(b=0.05):
@@ -29,8 +30,8 @@ def get_metrics(threshold=0.5):
 
 def build_lstm_maxout(hparams):
     keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(15, 20))
-    mlp_input = layers.Input(shape=(30,))
+    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
+    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
 
     rnn_imd = rnn_input
     for i in range(hparams["rnn_layers"]):
@@ -75,8 +76,8 @@ def build_lstm_maxout(hparams):
 
 def build_lstm(hparams):
     keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(15, 20))
-    mlp_input = layers.Input(shape=(30,))
+    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
+    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
 
     rnn_imd = rnn_input
     for i in range(hparams["rnn_layers"]):
@@ -110,8 +111,8 @@ def build_lstm(hparams):
 
 def build_lstm_conv(hparams):
     keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(15, 20))
-    mlp_input = layers.Input(shape=(30,))
+    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
+    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
 
     rnn_imd = rnn_input
     rnn_imd = layers.Conv1D(
@@ -153,8 +154,8 @@ def build_lstm_conv(hparams):
 
 def build_lstm_maxout_dropout(hparams):
     keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(15, 20))
-    mlp_input = layers.Input(shape=(30,))
+    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
+    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
 
     rnn_imd = rnn_input
     for i in range(hparams["rnn_layers"]):
@@ -202,8 +203,8 @@ def build_lstm_maxout_dropout(hparams):
 
 def build_conv_lstm_maxout_dropout(hparams):
     keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(15, 20))
-    mlp_input = layers.Input(shape=(30,))
+    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
+    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
 
     rnn_imd = rnn_input
     rnn_imd = layers.Conv1D(

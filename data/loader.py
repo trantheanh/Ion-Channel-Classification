@@ -6,13 +6,12 @@ import shutil
 from sklearn.model_selection import StratifiedKFold
 from resource import RESOURCE_PATH
 from constant.url import DataPath
+from constant.shape import InputShape
 
 
 train_path = os.path.join(RESOURCE_PATH, DataPath.train_file_name)
 test_path = os.path.join(RESOURCE_PATH, DataPath.test_file_name)
 fold_path = os.path.join(RESOURCE_PATH, "fold_{}.csv")
-cb_size = 1519
-pssm_size = (15, 20)
 
 
 """# Get data from Google Drive"""
@@ -65,6 +64,8 @@ def parse_csv_data(path):
 
 
 def parse_data(data):
+    cb_size = InputShape.CB_SIZE
+    pssm_size = (InputShape.PSSM_LENGTH, InputShape.PSSM_DIM)
     mlp_input = data[:, :cb_size]
     rnn_input = np.stack(
         [data[:, (cb_size + i * pssm_size[1]):(cb_size + (i + 1) * pssm_size[1])] for i in range(pssm_size[0])],
@@ -87,6 +88,8 @@ def normalize(data, mean=None, std=None):
 
 
 def split_k_fold(n_fold=5):
+    cb_size = InputShape.CB_SIZE
+    pssm_size = (InputShape.PSSM_LENGTH, InputShape.PSSM_DIM)
     print("START SPLIT DATA TO {} FOLD".format(n_fold))
     train_data = pd.read_csv(train_path).values
 
