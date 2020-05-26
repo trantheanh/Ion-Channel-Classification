@@ -90,7 +90,7 @@ class BinaryF1Score(ConfusionMatrix):
         super(BinaryF1Score, self).__init__(threshold=threshold, name=name, **kwargs)
 
     def result(self):
-        precision = tf.divide(self.tp, self.tp + self.tn)
+        precision = tf.divide(self.tp, self.tp + self.fp)
         recall = tf.divide(self.tp, self.tp + self.fn)
 
         f1 = 2 * tf.divide(precision * recall, precision + recall)
