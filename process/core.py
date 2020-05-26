@@ -7,7 +7,7 @@ from data.dataset import build_train_ds, build_test_ds
 from constant.index import DataIdx, MetricIdx
 from util.log import log_result, write
 from callbacks.core import build_callbacks
-from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity
+from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity, BinaryF1Score
 from data.loader import get_fold, get_data, preprocess_data
 from saved_model import SAVED_MODEL_PATH
 
@@ -72,7 +72,8 @@ def evaluate(model, test_ds):
         mcc = BinaryMCC(threshold=thresholds[i])(y_true=y_true, y_pred=y_pred)
         sen = BinarySensitivity(threshold=thresholds[i])(y_true=y_true, y_pred=y_pred)
         spec = BinarySpecificity(threshold=thresholds[i])(y_true=y_true, y_pred=y_pred)
-        results[thresholds[i]] = np.array([acc, mcc, sen, spec])
+        f1 = BinaryF1Score(threshold=thresholds[i])(y_true=y_true, y_pred=y_pred)
+        results[thresholds[i]] = np.array([f1, acc, mcc, sen, spec])
 
     return results
 
@@ -86,13 +87,14 @@ def evaluate_on_threshold(model, test_ds, threshold=0.5):
     mcc = BinaryMCC(threshold=threshold)(y_true=y_true, y_pred=y_pred)
     sen = BinarySensitivity(threshold=threshold)(y_true=y_true, y_pred=y_pred)
     spec = BinarySpecificity(threshold=threshold)(y_true=y_true, y_pred=y_pred)
+    f1 = BinaryF1Score(threshold=threshold)(y_true=y_true, y_pred=y_pred)
 
-    return {threshold: np.array[acc, mcc, sen, spec]}
+    return {threshold: np.array[f1, acc, mcc, sen, spec]}
 
 
 def get_best_threshold(results):
-    best = -1
-    best_threshold = None
+    best = results[0]
+    best_threshold = 0
     for threshold, result in results.items():
         target = result[MetricIdx.F1]
         if target > best:
@@ -107,7 +109,7 @@ def avg_evaluate(all_results):
     final_result = {}
     if len(all_results) > 0:
         for threshold, result in all_results[0].items():
-            final_result[threshold] = np.array([0, 0, 0, 0])
+            final_result[threshold] = np.zeros_like(result)
 
     for i, results in enumerate(all_results):
         for threshold, result in results.items():
