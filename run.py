@@ -41,27 +41,27 @@ flags.DEFINE_integer("conv1d_stride", 1, "Stride of Conv1D")
 
 
 def main(argv):
-    train_data_path = "https://drive.google.com/open?id=1EJ0VcOmKUUOpSQ4dDkhbhVzvbIjz-Wg5"
-    test_data_path = "https://drive.google.com/open?id=14Xo1zxFKHrus1KPxmVJe-D0S8Px9OIlX"
-    download_from_shareable_link(url=train_data_path, destination="train_data.csv")
-    download_from_shareable_link(url=test_data_path, destination="test_data.csv")
+    # train_data_path = "https://drive.google.com/open?id=1EJ0VcOmKUUOpSQ4dDkhbhVzvbIjz-Wg5"
+    # test_data_path = "https://drive.google.com/open?id=14Xo1zxFKHrus1KPxmVJe-D0S8Px9OIlX"
+    # download_from_shareable_link(url=train_data_path, destination="train_data.csv")
+    # download_from_shareable_link(url=test_data_path, destination="test_data.csv")
+    #
+    # train_data = parse_csv_data(path="train_data.csv")
+    # test_data = parse_csv_data(path="test_data.csv")
 
-    train_data = parse_csv_data(path="train_data.csv")
-    test_data = parse_csv_data(path="test_data.csv")
+    # print("Train Data Info:\n  MLP Feature: {}\n  RNN Feature: {}\n  Label: {}".format(
+    #   train_data[DataIdx.MLP_FEATURE].shape,
+    #   train_data[DataIdx.RNN_FEATURE].shape,
+    #   train_data[DataIdx.LABEL].shape
+    # ))
+    #
+    # print("Test Data Info:\n  MLP Feature: {}\n  RNN Feature: {}\n  Label: {}".format(
+    #   test_data[DataIdx.MLP_FEATURE].shape,
+    #   test_data[DataIdx.RNN_FEATURE].shape,
+    #   test_data[DataIdx.LABEL].shape
+    # ))
 
-    print("Train Data Info:\n  MLP Feature: {}\n  RNN Feature: {}\n  Label: {}".format(
-      train_data[DataIdx.MLP_FEATURE].shape,
-      train_data[DataIdx.RNN_FEATURE].shape,
-      train_data[DataIdx.LABEL].shape
-    ))
-
-    print("Test Data Info:\n  MLP Feature: {}\n  RNN Feature: {}\n  Label: {}".format(
-      test_data[DataIdx.MLP_FEATURE].shape,
-      test_data[DataIdx.RNN_FEATURE].shape,
-      test_data[DataIdx.LABEL].shape
-    ))
-
-    log_dir = os.path.join(os.getcwd(),"log", "hparam_tuning")
+    log_dir = os.path.join(os.getcwd(), "log", "hparam_tuning")
 
     n_experiments = 1000
 
