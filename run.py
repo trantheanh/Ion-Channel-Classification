@@ -80,7 +80,7 @@ def main(argv):
     conv1d_size = [2, 3, 4]
     conv1d_stride = [1, 2, 3]
     dropout = (0, 0.3)
-    flood_loss_coef = (0.1, 0.2)
+    flood_loss_coef = (1e-6, 0.2)
 
     hparams = {
         "threshold": np.random.random(size=(n_experiments,)),
@@ -101,7 +101,8 @@ def main(argv):
         "conv1d_depth": np.array(conv1d_depth)[np.random.randint(low=0, high=len(conv1d_depth), size=(n_experiments,))],
         "conv1d_size": np.array(conv1d_size)[np.random.randint(low=0, high=len(conv1d_size), size=(n_experiments,))],
         "conv1d_stride": np.array(conv1d_stride)[np.random.randint(low=0, high=len(conv1d_stride), size=(n_experiments,))],
-        "flood_loss_coef": np.random.random(size=(n_experiments,)) * (flood_loss_coef[1] - flood_loss_coef[0]),
+        "flood_loss_coef": np.logspace(np.log10(flood_loss_coef[0]), np.log10(flood_loss_coef[1]), base=10,
+                                    num=n_experiments),
     }
 
     configs = [{"hparams": {

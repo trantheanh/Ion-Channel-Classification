@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 from optimizers.core import build_optimizer
-from metrics.core import BinarySpecificity, BinarySensitivity, BinaryMCC, BinaryAccuracy
+from metrics.core import BinarySpecificity, BinarySensitivity, BinaryMCC, BinaryAccuracy, BinaryF1Score
 
 
 def flood_loss(b=0.05):
@@ -11,6 +11,17 @@ def flood_loss(b=0.05):
         loss = keras.backend.abs(loss - b) + b
         return loss
     return get_loss
+
+
+def get_metrics(threshold=0.5):
+
+    return [
+        BinaryF1Score(threshold),
+        BinaryAccuracy(threshold),
+        BinaryMCC(threshold),
+        BinarySensitivity(threshold),
+        BinarySpecificity(threshold)
+    ]
 
 
 """# Build model"""
@@ -56,12 +67,7 @@ def build_lstm_maxout(hparams):
           decay=hparams["lr_decay"]
       ),
       loss=keras.losses.binary_crossentropy,
-      metrics=[
-        BinaryAccuracy(hparams["threshold"]),
-        BinaryMCC(hparams["threshold"]),
-        BinarySensitivity(hparams["threshold"]),
-        BinarySpecificity(hparams["threshold"])
-      ]
+      metrics=get_metrics(hparams["threshold"])
     )
 
     return model
@@ -96,12 +102,7 @@ def build_lstm(hparams):
           decay=hparams["lr_decay"]
       ),
       loss=keras.losses.binary_crossentropy,
-      metrics=[
-        BinaryAccuracy(hparams["threshold"]),
-        BinaryMCC(hparams["threshold"]),
-        BinarySensitivity(hparams["threshold"]),
-        BinarySpecificity(hparams["threshold"])
-      ]
+      metrics=get_metrics(hparams["threshold"])
     )
 
     return model
@@ -144,12 +145,7 @@ def build_lstm_conv(hparams):
           decay=hparams["lr_decay"]
       ),
       loss=keras.losses.binary_crossentropy,
-      metrics=[
-        BinaryAccuracy(hparams["threshold"]),
-        BinaryMCC(hparams["threshold"]),
-        BinarySensitivity(hparams["threshold"]),
-        BinarySpecificity(hparams["threshold"])
-      ]
+      metrics=get_metrics(hparams["threshold"])
     )
 
     return model
@@ -198,12 +194,7 @@ def build_lstm_maxout_dropout(hparams):
           decay=hparams["lr_decay"]
       ),
       loss=flood_loss(hparams["flood_loss_coef"]),#keras.losses.binary_crossentropy,
-      metrics=[
-        BinaryAccuracy(hparams["threshold"]),
-        BinaryMCC(hparams["threshold"]),
-        BinarySensitivity(hparams["threshold"]),
-        BinarySpecificity(hparams["threshold"])
-      ]
+      metrics=get_metrics(hparams["threshold"])
     )
 
     return model
@@ -256,12 +247,7 @@ def build_conv_lstm_maxout_dropout(hparams):
           decay=hparams["lr_decay"]
       ),
       loss=keras.losses.binary_crossentropy,
-      metrics=[
-        BinaryAccuracy(hparams["threshold"]),
-        BinaryMCC(hparams["threshold"]),
-        BinarySensitivity(hparams["threshold"]),
-        BinarySpecificity(hparams["threshold"])
-      ]
+      metrics=get_metrics(hparams["threshold"])
     )
 
     return model

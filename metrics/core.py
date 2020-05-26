@@ -83,3 +83,15 @@ class BinarySpecificity(ConfusionMatrix):
         denominator = self.tn + self.fp + tf.keras.backend.epsilon()
 
         return tf.divide(numerator, denominator)
+
+
+class BinaryF1Score(ConfusionMatrix):
+    def __init__(self, threshold=0.5, name='binary_f1_score', **kwargs):
+        super(BinaryF1Score, self).__init__(threshold=threshold, name=name, **kwargs)
+
+    def result(self):
+        precision = tf.divide(self.tp, self.tp + self.tn)
+        recall = tf.divide(self.tp, self.tp + self.fn)
+
+        f1 = 2 * tf.divide(precision * recall, precision + recall)
+        return f1

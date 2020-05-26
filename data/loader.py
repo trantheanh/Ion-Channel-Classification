@@ -11,6 +11,8 @@ from constant.url import DataPath
 train_path = os.path.join(RESOURCE_PATH, DataPath.train_file_name)
 test_path = os.path.join(RESOURCE_PATH, DataPath.test_file_name)
 fold_path = os.path.join(RESOURCE_PATH, "fold_{}.csv")
+cb_size = 1519
+pssm_size = (15, 20)
 
 
 """# Get data from Google Drive"""
@@ -63,9 +65,12 @@ def parse_csv_data(path):
 
 
 def parse_data(data):
-    mlp_input = data[:, :30]
-    rnn_input = np.stack([data[:, (30 + i * 20):(30 + (i + 1) * 20)] for i in range(15)], axis=1)
-    label = data[:, 330]
+    mlp_input = data[:, :cb_size]
+    rnn_input = np.stack(
+        [data[:, (cb_size + i * pssm_size[1]):(cb_size + (i + 1) * pssm_size[1])] for i in range(pssm_size[0])],
+        axis=1
+    )
+    label = data[:, cb_size + pssm_size[0] * pssm_size[1]]
     return mlp_input, rnn_input, label
 
 
@@ -89,7 +94,10 @@ def split_k_fold(n_fold=5):
         n_splits=n_fold,
         shuffle=True,
         random_state=0
-    ).split(train_data[:, :330], train_data[:, 330])
+    ).split(
+        train_data[:, :(cb_size + pssm_size[0] * pssm_size[1])],
+        train_data[:, cb_size + pssm_size[0] * pssm_size[1]]
+    )
 
     folds_data = {}
 

@@ -1,5 +1,5 @@
 
 
 class DataPath:
-    train_file_name = "Added.Neg.Sample.Train.csv"
-    test_file_name = "Added.Neg.Sample.Test.csv"
+    train_file_name = "input.train.added.csv"
+    test_file_name = "input.ind.test.added.csv"

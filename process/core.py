@@ -91,12 +91,12 @@ def evaluate_on_threshold(model, test_ds, threshold=0.5):
 
 
 def get_best_threshold(results):
-    best_mcc = -1
+    best = -1
     best_threshold = None
     for threshold, result in results.items():
-        mcc = result[MetricIdx.MCC]
-        if mcc > best_mcc:
-            best_mcc = mcc
+        target = result[MetricIdx.F1]
+        if target > best:
+            best = target
             best_threshold = threshold
 
     return best_threshold
