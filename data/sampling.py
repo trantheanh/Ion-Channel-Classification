@@ -10,43 +10,44 @@ def smote(data):
     return x_res, y_res
 
 
-def get_data(data):
-    negative_data = []
-    positive_data = []
-    for index in range(len(data)):
-        if data[index][-1] == 0:
-            negative_data.append(data[index])
+def get_data_index(labels):
+    negative_idx = []
+    positive_idx = []
+    for index in range(len(labels)):
+        if labels[index] == 0:
+            negative_idx.append(index)
         else:
-            positive_data.append(data[index])
+            positive_idx.append(index)
 
-    major_data = None
-    minor_data = None
-    if len(negative_data) > len(positive_data):
-        major_data = np.array(negative_data)
-        minor_data = np.array(positive_data)
+    if len(negative_idx) > len(positive_idx):
+        major_idx = negative_idx
+        minor_idx = positive_idx
     else:
-        major_data = np.array(positive_data)
-        minor_data = np.array(negative_data)
+        major_idx = positive_idx
+        minor_idx = negative_idx
 
-    return major_data, minor_data
-
-
-def random_from_minor(data):
-    major_data, minor_data = get_data(data)
-
-    new_minor_data = minor_data[np.random.randint(low=0, high=len(minor_data), size=(len(major_data),))]
-    new_data = np.concatenate([major_data, new_minor_data], axis=0)
-
-    return new_data
+    return np.array(major_idx), np.array(minor_idx)
 
 
-def random_from_major(data):
-    major_data, minor_data = get_data(data)
+def random_from_minor(features, labels):
+    major_idx, minor_idx = get_data_index(labels)
 
-    new_major_data = major_data[np.random.randint(low=0, high=len(major_data), size=(len(minor_data),))]
-    new_data = np.concatenate([minor_data, new_major_data], axis=0)
+    new_minor_idx = minor_idx[np.random.randint(low=0, high=len(minor_idx), size=(len(major_idx),))]
+
+    new_data_idx = np.concatenate([major_idx, new_minor_idx], axis=0)
+
+    new_data = ([features[i][new_data_idx] for i in range(len(features))], labels[new_data_idx])
 
     return new_data
 
 
+def random_from_major(features, labels):
+    major_idx, minor_idx = get_data_index(labels)
 
+    new_major_idx = minor_idx[np.random.randint(low=0, high=len(major_idx), size=(len(minor_idx),))]
+
+    new_data_idx = np.concatenate([minor_idx, new_major_idx], axis=0)
+
+    new_data = ([features[i][new_data_idx] for i in range(len(features))], labels[new_data_idx])
+
+    return new_data

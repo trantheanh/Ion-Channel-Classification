@@ -94,9 +94,6 @@ def split_k_fold(n_fold=5):
     print("START SPLIT DATA TO {} FOLD".format(n_fold))
     train_data = pd.read_csv(train_path).values
 
-    # Sampling training data before split fold
-    train_data = random_from_minor(train_data)
-
     folds = StratifiedKFold(
         n_splits=n_fold,
         shuffle=True,
@@ -142,6 +139,7 @@ def get_data(n_fold):
 def get_fold(folds_data, fold_index=-1):
     train_data = np.concatenate([folds_data[i] for i in range(len(folds_data)) if i != fold_index])
     train_data = parse_data(train_data)
+    train_data = random_from_minor(train_data[:-1], train_data[-1])
 
     if fold_index < 0:
         return train_data
