@@ -85,9 +85,13 @@ def main(argv):
     hparams = {
         "threshold": np.random.random(size=(n_experiments,)),
         "batch_size": np.array(batch_size)[
-        np.random.randint(low=0, high=len(batch_size), size=(n_experiments,))],
-        "learning_rate": np.logspace(np.log10(learning_rate[0]), np.log10(learning_rate[1]), base=10,
-                                    num=n_experiments),
+            np.random.randint(low=0, high=len(batch_size), size=(n_experiments,))
+        ],
+        "learning_rate": np.logspace(
+            np.log10(learning_rate[0]),
+            np.log10(learning_rate[1]),
+            base=10,
+            num=n_experiments),
         "n_epoch": np.random.randint(low=n_epoch[0], high=n_epoch[1] + 1, size=(n_experiments,)),
         "optimizer": np.array(optimizer)[np.random.randint(low=0, high=len(optimizer), size=(n_experiments,))],
         "maxout_head": np.array(maxout_head)[
