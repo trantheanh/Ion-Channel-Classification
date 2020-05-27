@@ -7,6 +7,7 @@ from sklearn.model_selection import StratifiedKFold
 from resource import RESOURCE_PATH
 from constant.url import DataPath
 from constant.shape import InputShape
+from data.sampling import random_from_minor
 
 
 train_path = os.path.join(RESOURCE_PATH, DataPath.train_file_name)
@@ -92,6 +93,9 @@ def split_k_fold(n_fold=5):
     pssm_size = (InputShape.PSSM_LENGTH, InputShape.PSSM_DIM)
     print("START SPLIT DATA TO {} FOLD".format(n_fold))
     train_data = pd.read_csv(train_path).values
+
+    # Sampling training data before split fold
+    train_data = random_from_minor(train_data)
 
     folds = StratifiedKFold(
         n_splits=n_fold,
