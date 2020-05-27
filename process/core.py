@@ -89,7 +89,7 @@ def evaluate_on_threshold(model, test_ds, threshold=0.5):
     spec = BinarySpecificity(threshold=threshold)(y_true=y_true, y_pred=y_pred)
     f1 = BinaryF1Score(threshold=threshold)(y_true=y_true, y_pred=y_pred)
 
-    return {threshold: np.array[f1, acc, mcc, sen, spec]}
+    return {threshold: np.array([f1, acc, mcc, sen, spec])}
 
 
 def get_best_threshold(results):
