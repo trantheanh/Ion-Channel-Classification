@@ -36,7 +36,7 @@ def random_from_minor(features, labels):
 
     new_data_idx = np.concatenate([major_idx, new_minor_idx], axis=0)
 
-    new_data = ([features[i][new_data_idx] for i in range(len(features))], labels[new_data_idx])
+    new_data = [features[i][new_data_idx] for i in range(len(features))] + [labels[new_data_idx]]
 
     return new_data
 
