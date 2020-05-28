@@ -93,7 +93,7 @@ def evaluate_on_threshold(model, test_ds, threshold=0.5):
 
 
 def get_best_threshold(results):
-    best = results[0][MetricIdx.F1]
+    best = 0
     best_threshold = 0
     for threshold, result in results.items():
         target = result[MetricIdx.F1]
