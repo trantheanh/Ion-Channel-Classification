@@ -152,7 +152,7 @@ def k_fold_experiment(config, folds_data, test_data):
             config=config,
             train_ds=train_ds,
             test_ds=dev_ds,
-            need_threshold=False,
+            need_threshold=True,
             need_save=True,
             is_final=False
         )
