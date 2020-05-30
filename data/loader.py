@@ -8,11 +8,17 @@ from resource import RESOURCE_PATH
 from constant.url import DataPath
 from constant.shape import InputShape
 from data.sampling import random_from_minor
+from data.dictionary import EmbDict
 
 
 train_path = os.path.join(RESOURCE_PATH, DataPath.train_file_name)
 test_path = os.path.join(RESOURCE_PATH, DataPath.test_file_name)
 fold_path = os.path.join(RESOURCE_PATH, "fold_{}.csv")
+emb_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.emb_file_name)
+train_raw_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.train_raw_file_name)
+test_raw_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.test_raw_file_name)
+train_pssm_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.train_pssm_file_name)
+test_pssm_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.test_pssm_file_name)
 
 
 """# Get data from Google Drive"""
@@ -154,6 +160,31 @@ def preprocess_data(train_data, test_data):
     train_data, mean, std = normalize(train_data)
     test_data, _, _ = normalize(test_data, mean, std)
     return train_data, test_data
+
+
+def read_raw_data(file_path) -> list:
+    data = []
+    with open(file_path, "r") as f:
+        for index, line in enumerate(f):
+            example = []
+            seq = line.split(" ")
+            example += seq[1:-1]
+            example.append(int(seq[0] == "A"))
+            data.append(example)
+
+    return data
+
+
+def read_emb_data():
+    emb_lookup = EmbDict(emb_path)
+    train_raw_data = read_raw_data(train_raw_path)
+    test_raw_data = read_raw_data(test_raw_path)
+    train_emb_data = emb_lookup(train_raw_data[:-1])
+    test_emb_data = emb_lookup(test_raw_data[:-1])
+
+    return train_emb_data, test_emb_data
+
+
 
 
 

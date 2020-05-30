@@ -1,4 +1,4 @@
 class InputShape:
-    CB_SIZE = 1519
+    CB_SIZE = 1253
     PSSM_LENGTH = 15
     PSSM_DIM = 20
