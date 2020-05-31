@@ -14,7 +14,7 @@ def flood_loss(b=0.05):
     return get_loss
 
 
-def get_metrics(threshold=0.5):
+def get_metrics(threshold=0.5) -> list:
 
     return [
         BinaryF1Score(threshold),
@@ -28,7 +28,7 @@ def get_metrics(threshold=0.5):
 """# Build model"""
 
 
-def build_lstm_maxout(hparams):
+def build_lstm_maxout(hparams) -> keras.models.Model:
     keras.backend.clear_session()
     rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
     mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
@@ -74,7 +74,7 @@ def build_lstm_maxout(hparams):
     return model
 
 
-def build_lstm(hparams):
+def build_lstm(hparams) -> keras.models.Model:
     keras.backend.clear_session()
     rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
     mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
@@ -109,7 +109,7 @@ def build_lstm(hparams):
     return model
 
 
-def build_lstm_conv(hparams):
+def build_lstm_conv(hparams) -> keras.models.Model:
     keras.backend.clear_session()
     rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
     mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
@@ -152,7 +152,7 @@ def build_lstm_conv(hparams):
     return model
 
 
-def build_lstm_maxout_dropout(hparams):
+def build_lstm_maxout_dropout(hparams) -> keras.models.Model:
     keras.backend.clear_session()
     rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
     mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
@@ -202,7 +202,7 @@ def build_lstm_maxout_dropout(hparams):
     return model
 
 
-def build_conv_lstm_maxout_dropout(hparams):
+def build_conv_lstm_maxout_dropout(hparams) -> keras.models.Model:
     keras.backend.clear_session()
     rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
     mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))

@@ -65,7 +65,7 @@ def download_from_shareable_link(url, destination):
 
 
 def parse_csv_data(path):
-    data = pd.read_csv(path).values
+    data = pd.read_csv(path, header=None).values
 
     return parse_data(data)
 
@@ -98,7 +98,7 @@ def split_k_fold(n_fold=5):
     cb_size = InputShape.CB_SIZE
     pssm_size = (InputShape.PSSM_LENGTH, InputShape.PSSM_DIM)
     print("START SPLIT DATA TO {} FOLD".format(n_fold))
-    train_data = pd.read_csv(train_path).values
+    train_data = pd.read_csv(train_path, header=None).values
 
     folds = StratifiedKFold(
         n_splits=n_fold,
@@ -134,7 +134,7 @@ def get_data(n_fold):
 
     folds_data = []
     for i in range(n_fold):
-        data = pd.read_csv(fold_path.format(i)).values
+        data = pd.read_csv(fold_path.format(i), header=None).values
         folds_data.append(data)
 
     test_data = parse_csv_data(test_path)
@@ -162,27 +162,36 @@ def preprocess_data(train_data, test_data):
     return train_data, test_data
 
 
-def read_raw_data(file_path) -> list:
+def read_raw_data(file_path, need_int=True) -> np.ndarray:
     data = []
     with open(file_path, "r") as f:
         for index, line in enumerate(f):
             example = []
             seq = line.split(" ")
             example += seq[1:-1]
-            example.append(int(seq[0] == "A"))
+            if need_int:
+                example.append(int(seq[0] == "A"))
+            else:
+                example.append(seq[0])
             data.append(example)
-
-    return data
+    return np.array(data)
 
 
 def read_emb_data():
     emb_lookup = EmbDict(emb_path)
     train_raw_data = read_raw_data(train_raw_path)
     test_raw_data = read_raw_data(test_raw_path)
-    train_emb_data = emb_lookup(train_raw_data[:-1])
-    test_emb_data = emb_lookup(test_raw_data[:-1])
+    train_emb_data = emb_lookup(train_raw_data[:, :-1])
+    test_emb_data = emb_lookup(test_raw_data[:, :-1])
 
-    return train_emb_data, test_emb_data
+    return train_emb_data, test_emb_data, train_raw_data[:, -1], test_raw_data[:, -1]
+
+
+def read_pssm_data():
+    train_pssm = pd.read_csv(train_pssm_path, header=None).values
+    test_pssm = pd.read_csv(test_pssm_path, header=None).values
+
+    return train_pssm[:, :-1], test_pssm[:, :-1], train_pssm[:, -1], test_pssm[:, -1]
 
 
 
