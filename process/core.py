@@ -128,11 +128,12 @@ def k_fold_experiment(config, folds_data, test_data):
 
     train_results = []
     dev_results = []
-    train_data = get_fold(folds_data=folds_data)
+    need_oversampling = False
+    train_data = get_fold(folds_data=folds_data, need_oversampling=need_oversampling)
     train_data, test_data = preprocess_data(train_data, test_data)
     for fold_index in range(len(folds_data)):
         print("FOLD: {}".format(fold_index + 1))
-        fold_data, dev_data = get_fold(folds_data, fold_index)
+        fold_data, dev_data = get_fold(folds_data, fold_index, need_oversampling=need_oversampling)
         fold_data, dev_data = preprocess_data(fold_data, dev_data)
 
         train_ds = build_train_ds(

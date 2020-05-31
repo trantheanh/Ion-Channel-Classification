@@ -142,10 +142,12 @@ def get_data(n_fold):
     return folds_data, test_data
 
 
-def get_fold(folds_data, fold_index=-1):
+def get_fold(folds_data, fold_index=-1, need_oversampling=True):
     train_data = np.concatenate([folds_data[i] for i in range(len(folds_data)) if i != fold_index])
     train_data = parse_data(train_data)
-    train_data = random_from_minor(train_data[:-1], train_data[-1])
+
+    if need_oversampling:
+        train_data = random_from_minor(train_data[:-1], train_data[-1])
 
     if fold_index < 0:
         return train_data
