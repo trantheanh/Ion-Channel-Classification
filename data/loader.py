@@ -170,7 +170,7 @@ def read_raw_data(file_path, need_int=True) -> np.ndarray:
             seq = line.split(" ")
             example += seq[1:-1]
             if need_int:
-                example.append(int(seq[0] == "A"))
+                example.append(int(seq[0] == "__label__A"))
             else:
                 example.append(seq[0])
             data.append(example)

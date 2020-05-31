@@ -109,40 +109,40 @@ def main(argv):
                                     num=n_experiments),
     }
 
-    # configs = [{"hparams": {
-    #     "threshold": 0.5,
-    #     "batch_size": int(hparams["batch_size"][i]),
-    #     "learning_rate": hparams["learning_rate"][i],
-    #     "n_epoch": int(hparams["n_epoch"][i]),
-    #     "optimizer": hparams["optimizer"][i],
-    #     "maxout_head": int(hparams["maxout_head"][i]),
-    #     "maxout_units": int(hparams["maxout_units"][i]),
-    #     "rnn_layers": int(hparams["rnn_layers"][i]),
-    #     "rnn_units": int(hparams["rnn_units"][i]),
-    #     "lr_decay": lr_decay,
-    #     "conv1d_depth": int(hparams["conv1d_depth"][i]),
-    #     "dropout": hparams["dropout"][i],
-    #     "conv1d_size": int(hparams["conv1d_size"][i]),
-    #     "conv1d_stride": int(hparams["conv1d_stride"][i]),
-    #     "flood_loss_coef": hparams["flood_loss_coef"][i]
-    # }} for i in range(n_experiments)]
-
     configs = [{"hparams": {
         "threshold": 0.5,
-        "batch_size": FLAGS.batch_size,
-        "learning_rate": FLAGS.learning_rate,
-        "n_epoch": FLAGS.n_epoch,
-        "optimizer": FLAGS.optimizer,
-        "maxout_head": FLAGS.maxout_head,
-        "maxout_units": FLAGS.maxout_units,
-        "rnn_layers": FLAGS.rnn_layers,
-        "rnn_units": FLAGS.rnn_units,
+        "batch_size": int(hparams["batch_size"][i]),
+        "learning_rate": hparams["learning_rate"][i],
+        "n_epoch": int(hparams["n_epoch"][i]),
+        "optimizer": hparams["optimizer"][i],
+        "maxout_head": int(hparams["maxout_head"][i]),
+        "maxout_units": int(hparams["maxout_units"][i]),
+        "rnn_layers": int(hparams["rnn_layers"][i]),
+        "rnn_units": int(hparams["rnn_units"][i]),
         "lr_decay": lr_decay,
-        "conv1d_depth": FLAGS.conv1d_depth,
-        "dropout": FLAGS.dropout,
-        "conv1d_size": FLAGS.conv1d_size,
-        "conv1d_stride": FLAGS.conv1d_stride
+        "conv1d_depth": int(hparams["conv1d_depth"][i]),
+        "dropout": hparams["dropout"][i],
+        "conv1d_size": int(hparams["conv1d_size"][i]),
+        "conv1d_stride": int(hparams["conv1d_stride"][i]),
+        "flood_loss_coef": hparams["flood_loss_coef"][i]
     }} for i in range(n_experiments)]
+
+    # configs = [{"hparams": {
+    #     "threshold": 0.5,
+    #     "batch_size": FLAGS.batch_size,
+    #     "learning_rate": FLAGS.learning_rate,
+    #     "n_epoch": FLAGS.n_epoch,
+    #     "optimizer": FLAGS.optimizer,
+    #     "maxout_head": FLAGS.maxout_head,
+    #     "maxout_units": FLAGS.maxout_units,
+    #     "rnn_layers": FLAGS.rnn_layers,
+    #     "rnn_units": FLAGS.rnn_units,
+    #     "lr_decay": lr_decay,
+    #     "conv1d_depth": FLAGS.conv1d_depth,
+    #     "dropout": FLAGS.dropout,
+    #     "conv1d_size": FLAGS.conv1d_size,
+    #     "conv1d_stride": FLAGS.conv1d_stride
+    # }} for i in range(n_experiments)]
 
     if FLAGS.is_tuning == "Y":
         experiment(
