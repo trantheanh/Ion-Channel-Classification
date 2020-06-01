@@ -118,11 +118,13 @@ def build_model() -> keras.models.Model:
     # )(emb_imd)
     # emb_imd = layers.MaxPool1D()(emb_imd)
 
-    emb_imd = layers.GRU(
-        units=32,
-        return_sequences=False,
-        dropout=0.1
-    )(emb_imd)
+    emb_imd = layers.GlobalAveragePooling1D()(emb_imd)
+
+    # emb_imd = layers.GRU(
+    #     units=32,
+    #     return_sequences=False,
+    #     dropout=0.1
+    # )(emb_imd)
 
     # emb_imd = layers.GRU(
     #     units=512,
