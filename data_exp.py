@@ -119,16 +119,16 @@ def build_model() -> keras.models.Model:
     # emb_imd = layers.MaxPool1D()(emb_imd)
 
     emb_imd = layers.GRU(
-        units=512,
+        units=32,
         return_sequences=True,
         dropout=0.1
     )(emb_imd)
 
-    emb_imd = layers.GRU(
-        units=512,
-        return_sequences=False,
-        dropout=0.1
-    )(emb_imd)
+    # emb_imd = layers.GRU(
+    #     units=512,
+    #     return_sequences=False,
+    #     dropout=0.1
+    # )(emb_imd)
 
     # imd = emb_imd
     imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd])
