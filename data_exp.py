@@ -20,6 +20,14 @@ from data.loader import read_emb_data, read_pssm_data
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+  except RuntimeError as e:
+    print(e)
+
 
 def get_tfidf(raw_data):
     vectorizer = TfidfVectorizer()
