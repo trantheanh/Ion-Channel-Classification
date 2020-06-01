@@ -38,7 +38,7 @@ def train_sup_emb():
     model = fasttext.train_supervised(
         os.path.join(RESOURCE_PATH, "29052020", "raw.train"),
         epoch=100,
-        dim=128
+        dim=InputShape.EMB_DIM
     )
     model.save_model(os.path.join(RESOURCE_PATH, "29052020", "emb.bin"))
     return model
