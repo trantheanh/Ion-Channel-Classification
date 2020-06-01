@@ -16,7 +16,7 @@ class EmbDict:
 
     def __call__(self, sequences) -> np.ndarray:
         result = []
-        for tokens in sequences:
+        for _, tokens in enumerate(sequences):
             emb = []
             for i in range(len(tokens)):
                 if self.embs.get(tokens[i]) is not None:
