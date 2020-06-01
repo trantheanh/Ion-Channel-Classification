@@ -120,7 +120,7 @@ def build_model() -> keras.models.Model:
 
     emb_imd = layers.GRU(
         units=32,
-        return_sequences=True,
+        return_sequences=False,
         dropout=0.1
     )(emb_imd)
 
