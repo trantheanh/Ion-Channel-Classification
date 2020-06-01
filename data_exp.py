@@ -152,7 +152,7 @@ def train(train_ds, test_ds):
         shuffle=True,
         class_weight={
               0: 1,
-              1: 50
+              1: 20
         },
         callbacks=callbacks
     )
