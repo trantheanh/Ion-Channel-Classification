@@ -180,7 +180,7 @@ def train(train_ds, test_ds):
 
 def build_train_ds(emb_input, pssm_input, label):
     ds = tf.data.Dataset.from_tensor_slices(((emb_input, pssm_input), label))
-    ds = ds.shuffle(10000).batch(1)
+    ds = ds.shuffle(10000).batch(16)
     return ds
 
 
