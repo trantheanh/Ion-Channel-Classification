@@ -9,6 +9,7 @@ from constant.url import DataPath
 from constant.shape import InputShape
 from data.sampling import random_from_minor
 from data.dictionary import EmbDict
+import fasttext
 
 
 train_path = os.path.join(RESOURCE_PATH, DataPath.train_file_name)
@@ -187,6 +188,33 @@ def read_emb_data():
     test_emb_data = emb_lookup(test_raw_data[:, :-1])
 
     return train_emb_data, test_emb_data, train_raw_data[:, -1], test_raw_data[:, -1]
+
+
+def read_from_emb(emb:fasttext.FastText):
+    train_raw_data = read_raw_data(train_raw_path)
+    test_raw_data = read_raw_data(test_raw_path)
+
+    train_emb = []
+    for _, tokens in enumerate(train_raw_data[:, :-1]):
+        vec = []
+        for i in range(len(tokens)):
+            vec.append(emb.get_word_vector(tokens[i]))
+        train_emb.append(vec)
+    train_emb = np.array(train_emb)
+
+    test_emb = []
+    for _, tokens in enumerate(test_raw_data[:, :-1]):
+        vec = []
+        for i in range(len(tokens)):
+            vec.append(emb.get_word_vector(tokens[i]))
+        test_emb.append(vec)
+    test_emb = np.array(test_emb)
+
+    return train_emb, test_emb
+
+    # for i in range(len(train_raw_data)):
+        # train_emb.append(emb.)
+    # print(train_raw_data[0])
 
 
 def read_pssm_data():

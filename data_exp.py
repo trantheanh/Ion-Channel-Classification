@@ -16,9 +16,10 @@ import pandas as pd
 from constant.shape import InputShape
 
 from data.dictionary import EmbDict
-from data.loader import read_emb_data, read_pssm_data
+from data.loader import read_emb_data, read_pssm_data, read_from_emb
 
 from sklearn.feature_extraction.text import TfidfVectorizer
+import fasttext
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -31,6 +32,20 @@ if gpus:
 
 def get_tfidf(raw_data):
     vectorizer = TfidfVectorizer()
+
+
+def train_sup_emb():
+    model = fasttext.train_supervised(
+        os.path.join(RESOURCE_PATH, "29052020", "raw.train"),
+        epoch=100,
+        dim=128
+    )
+    model.save_model(os.path.join(RESOURCE_PATH, "29052020", "emb.bin"))
+
+
+def load_emb() -> fasttext.FastText:
+    model = fasttext.load_model(os.path.join(RESOURCE_PATH, "29052020", "emb.bin"))
+    return model
 
 
 def get_metrics(threshold=0.1) -> list:
@@ -114,7 +129,7 @@ def build_model() -> keras.models.Model:
         dropout=0.1
     )(emb_imd)
 
-    imd = pssm_imd
+    imd = emb_imd
     # imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd])
     imd = layers.Dropout(rate=0.1)(imd)
     imd = layers.Dense(units=512, activation="relu")(imd)
@@ -174,7 +189,8 @@ def build_test_ds(emb_input, pssm_input, label):
     return ds
 
 
-train_emb, test_emb, train_emb_label, test_emb_label = read_emb_data()
+model_emb = load_emb()
+train_emb, test_emb = read_from_emb(model_emb)
 train_pssm, test_pssm, train_pssm_label, test_pssm_label = read_pssm_data()
 
 train_emb_input, train_pssm_input, train_label = parse_data(train_emb, train_pssm, train_pssm_label)
@@ -185,8 +201,7 @@ print(test_emb_input.shape, test_pssm_input.shape, test_label.shape)
 
 train_ds = build_train_ds(train_emb_input, train_pssm_input, train_label)
 test_ds = build_test_ds(test_emb_input, test_pssm_input, test_label)
-# print(train_emb_input.shape)
-# print(train_pssm_input.shape)
-# print(train_label.shape)
 
 train(train_ds, test_ds)
+
+# train_sup_emb()
