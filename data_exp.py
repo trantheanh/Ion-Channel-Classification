@@ -102,7 +102,7 @@ def build_model() -> keras.models.Model:
     # )(pssm_imd)
 
     pssm_imd = layers.GRU(
-        units=256,
+        units=512,
         return_sequences=False,
         dropout=0.1
     )(pssm_imd)
@@ -134,7 +134,7 @@ def build_model() -> keras.models.Model:
 
     # imd = emb_imd
     imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd])
-    imd = layers.Dropout(rate=0.2)(imd)
+    imd = layers.Dropout(rate=0.3)(imd)
     # imd = layers.Dense(units=512, activation="relu")(imd)
 
     output_tf = layers.Dense(
@@ -143,11 +143,12 @@ def build_model() -> keras.models.Model:
     )(imd)
 
     model = tf.keras.models.Model(inputs=[emb_input, pssm_input], outputs=output_tf)
+    print(model.summary())
 
     model.compile(
-      optimizer=keras.optimizers.Adam(
-          learning_rate=0.0001,
-          decay=1e-6
+      optimizer=keras.optimizers.Nadam(
+          learning_rate=0.00016280409164167792,
+          # decay=1e-6
       ),
       loss=keras.losses.binary_crossentropy,
       metrics=get_metrics(threshold=0.5)
