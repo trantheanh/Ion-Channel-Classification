@@ -86,14 +86,14 @@ def build_model() -> keras.models.Model:
 
     pssm_imd = pssm_input
 
-    pssm_imd = layers.Conv1D(
-        filters=32,
-        kernel_size=3,
-        strides=1,
-        padding='SAME',
-        activation="relu"
-    )(pssm_imd)
-    pssm_imd = layers.MaxPool1D()(pssm_imd)
+    # pssm_imd = layers.Conv1D(
+    #     filters=32,
+    #     kernel_size=3,
+    #     strides=1,
+    #     padding='SAME',
+    #     activation="relu"
+    # )(pssm_imd)
+    # pssm_imd = layers.MaxPool1D()(pssm_imd)
 
     pssm_imd = layers.GRU(
         units=512,
@@ -109,14 +109,14 @@ def build_model() -> keras.models.Model:
 
     emb_imd = emb_input
 
-    emb_imd = layers.Conv1D(
-        filters=32,
-        kernel_size=3,
-        strides=1,
-        padding='SAME',
-        activation="relu"
-    )(emb_imd)
-    emb_imd = layers.MaxPool1D()(emb_imd)
+    # emb_imd = layers.Conv1D(
+    #     filters=32,
+    #     kernel_size=3,
+    #     strides=1,
+    #     padding='SAME',
+    #     activation="relu"
+    # )(emb_imd)
+    # emb_imd = layers.MaxPool1D()(emb_imd)
 
     emb_imd = layers.GRU(
         units=512,
@@ -144,7 +144,7 @@ def build_model() -> keras.models.Model:
 
     model.compile(
       optimizer=keras.optimizers.Adam(
-          learning_rate=0.00016280409164167792,
+          learning_rate=0.0001,
           decay=1e-6
       ),
       loss=keras.losses.binary_crossentropy,
