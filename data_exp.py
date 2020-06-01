@@ -106,8 +106,9 @@ def build_model() -> keras.models.Model:
         dropout=0.1
     )(emb_imd)
 
-    imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd])
-    imd = layers.Dropout(rate=0.3)(imd)
+    imd = emb_imd
+    # imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd])
+    imd = layers.Dropout(rate=0.1)(imd)
     imd = layers.Dense(units=512, activation="relu")(imd)
 
     output_tf = layers.Dense(
