@@ -40,7 +40,7 @@ class ConfusionMatrix(keras.metrics.Metric):
 
 
 class BinaryAccuracy(ConfusionMatrix):
-    def __init__(self, threshold=0.5, name='binary_acc', **kwargs):
+    def __init__(self, threshold=0.5, name='acc', **kwargs):
         super(BinaryAccuracy, self).__init__(threshold=threshold, name=name, **kwargs)
 
     def result(self):
@@ -51,7 +51,7 @@ class BinaryAccuracy(ConfusionMatrix):
 
 
 class BinaryMCC(ConfusionMatrix):
-    def __init__(self, threshold=0.5, name='binary_mcc', **kwargs):
+    def __init__(self, threshold=0.5, name='mcc', **kwargs):
         super(BinaryMCC, self).__init__(threshold=threshold, name=name, **kwargs)
 
     def result(self):
@@ -64,7 +64,7 @@ class BinaryMCC(ConfusionMatrix):
 
 
 class BinarySensitivity(ConfusionMatrix):
-    def __init__(self, threshold=0.5, name='binary_sen', **kwargs):
+    def __init__(self, threshold=0.5, name='sen', **kwargs):
         super(BinarySensitivity, self).__init__(threshold=threshold, name=name, **kwargs)
 
     def result(self):
@@ -75,7 +75,7 @@ class BinarySensitivity(ConfusionMatrix):
 
 
 class BinarySpecificity(ConfusionMatrix):
-    def __init__(self, threshold=0.5, name='binary_spec', **kwargs):
+    def __init__(self, threshold=0.5, name='spec', **kwargs):
         super(BinarySpecificity, self).__init__(threshold=threshold, name=name, **kwargs)
 
     def result(self):
@@ -86,7 +86,7 @@ class BinarySpecificity(ConfusionMatrix):
 
 
 class BinaryF1Score(ConfusionMatrix):
-    def __init__(self, threshold=0.5, name='binary_f1_score', **kwargs):
+    def __init__(self, threshold=0.5, name='f1', **kwargs):
         super(BinaryF1Score, self).__init__(threshold=threshold, name=name, **kwargs)
 
     def result(self):

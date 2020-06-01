@@ -22,7 +22,7 @@ class EmbDict:
                 if self.embs.get(tokens[i]) is not None:
                     emb.append(self.embs[tokens[i]])
                 else:
-                    emb.append(0)
+                    emb.append(0.)
             result.append(emb)
 
         return np.array(result)
