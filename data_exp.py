@@ -63,12 +63,13 @@ def build_model() -> keras.models.Model:
     pssm_imd = pssm_input
 
     pssm_imd = layers.Conv1D(
-        filters=32,
+        filters=64,
         kernel_size=3,
         strides=1,
         padding='SAME',
         activation="relu"
     )(pssm_imd)
+    pssm_imd = layers.MaxPool1D()(pssm_imd)
 
     pssm_imd = layers.GRU(
         units=512,
@@ -85,12 +86,13 @@ def build_model() -> keras.models.Model:
     emb_imd = emb_input
 
     emb_imd = layers.Conv1D(
-        filters=32,
+        filters=64,
         kernel_size=3,
         strides=1,
         padding='SAME',
         activation="relu"
     )(emb_imd)
+    emb_imd = layers.MaxPool1D()(emb_imd)
 
     emb_imd = layers.GRU(
         units=512,
@@ -105,7 +107,7 @@ def build_model() -> keras.models.Model:
     )(emb_imd)
 
     imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd])
-    imd = layers.Dropout(rate=0.2)(imd)
+    imd = layers.Dropout(rate=0.3)(imd)
     imd = layers.Dense(units=512, activation="relu")(imd)
 
     output_tf = layers.Dense(
@@ -141,7 +143,7 @@ def train(train_ds, test_ds):
         shuffle=True,
         class_weight={
               0: 1,
-              1: 20
+              1: 50
         },
         callbacks=callbacks
     )
@@ -153,7 +155,7 @@ def train(train_ds, test_ds):
 
 def build_train_ds(emb_input, pssm_input, label):
     ds = tf.data.Dataset.from_tensor_slices(((emb_input, pssm_input), label))
-    ds = ds.shuffle(10000).batch(32)
+    ds = ds.shuffle(10000).batch(16)
     return ds
 
 
