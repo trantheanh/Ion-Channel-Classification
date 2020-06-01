@@ -95,14 +95,14 @@ def build_model() -> keras.models.Model:
     # )(pssm_imd)
     # pssm_imd = layers.MaxPool1D()(pssm_imd)
 
-    pssm_imd = layers.GRU(
-        units=512,
-        return_sequences=True,
-        dropout=0.1
-    )(pssm_imd)
+    # pssm_imd = layers.GRU(
+    #     units=512,
+    #     return_sequences=True,
+    #     dropout=0.1
+    # )(pssm_imd)
 
     pssm_imd = layers.GRU(
-        units=512,
+        units=256,
         return_sequences=False,
         dropout=0.1
     )(pssm_imd)
