@@ -41,6 +41,7 @@ def train_sup_emb():
         dim=128
     )
     model.save_model(os.path.join(RESOURCE_PATH, "29052020", "emb.bin"))
+    return model
 
 
 def load_emb() -> fasttext.FastText:
@@ -189,7 +190,7 @@ def build_test_ds(emb_input, pssm_input, label):
     return ds
 
 
-model_emb = load_emb()
+model_emb = train_sup_emb()
 train_emb, test_emb = read_from_emb(model_emb)
 train_pssm, test_pssm, train_pssm_label, test_pssm_label = read_pssm_data()
 
