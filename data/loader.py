@@ -16,11 +16,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 train_path = os.path.join(RESOURCE_PATH, DataPath.train_file_name)
 test_path = os.path.join(RESOURCE_PATH, DataPath.test_file_name)
 fold_path = os.path.join(RESOURCE_PATH, "fold_{}.csv")
-emb_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.emb_file_name)
-train_raw_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.train_raw_file_name)
-test_raw_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.test_raw_file_name)
-train_pssm_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.train_pssm_file_name)
-test_pssm_path = os.path.join(RESOURCE_PATH, "29052020", DataPath.test_pssm_file_name)
+emb_path = os.path.join(RESOURCE_PATH, DataPath.emb_file_name)
+train_raw_path = os.path.join(RESOURCE_PATH, DataPath.train_raw_file_name)
+test_raw_path = os.path.join(RESOURCE_PATH, DataPath.test_raw_file_name)
+train_pssm_path = os.path.join(RESOURCE_PATH, DataPath.train_pssm_file_name)
+test_pssm_path = os.path.join(RESOURCE_PATH, DataPath.test_pssm_file_name)
 
 
 """# Get data from Google Drive"""

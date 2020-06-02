@@ -37,18 +37,18 @@ def get_tfidf(raw_data):
 
 def train_sup_emb():
     model = fasttext.train_supervised(
-        os.path.join(RESOURCE_PATH, "29052020", "raw.train"),
+        os.path.join(RESOURCE_PATH, DataPath.train_raw_file_name),
         epoch=25,
         dim=InputShape.EMB_DIM,
-        # autotuneValidationFile=os.path.join(RESOURCE_PATH, "29052020", "raw.ind.test")
+        # autotuneValidationFile=os.path.join(RESOURCE_PATH, DataPath.test_raw_file_name)
     )
-    model.save_model(os.path.join(RESOURCE_PATH, "29052020", "emb.bin"))
+    model.save_model(os.path.join(RESOURCE_PATH, "temp", "emb.bin"))
     InputShape.EMB_DIM = model.get_dimension()
     return model
 
 
 def load_emb() -> fasttext.FastText:
-    model = fasttext.load_model(os.path.join(RESOURCE_PATH, "29052020", "emb.bin"))
+    model = fasttext.load_model(os.path.join(RESOURCE_PATH, "temp", "emb.bin"))
     return model
 
 
@@ -115,7 +115,7 @@ def build_model() -> keras.models.Model:
     emb_imd = emb_input
 
     # emb_imd = layers.Conv1D(
-    #     filters=32,
+    #     filters=16,
     #     kernel_size=3,
     #     strides=1,
     #     padding='SAME',
@@ -156,6 +156,7 @@ def build_model() -> keras.models.Model:
 
     model.compile(
       optimizer=keras.optimizers.Nadam(
+          # learning_rate=0.001,
           learning_rate=0.00016280409164167792,
           # decay=1e-6
       ),
@@ -193,6 +194,9 @@ def train(train_ds, test_ds):
 
 
 def build_train_ds(emb_input, pssm_input, tfidf_input, label):
+    # print(emb_input.shape)
+    # print(pssm_input.shape)
+    # print(tfidf_input.shape)
     ds = tf.data.Dataset.from_tensor_slices(((emb_input, pssm_input, tfidf_input), label))
     ds = ds.shuffle(10000).batch(1)
     return ds
