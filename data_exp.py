@@ -14,6 +14,7 @@ from resource import RESOURCE_PATH
 from constant.url import DataPath
 import pandas as pd
 from constant.shape import InputShape
+import shutil
 
 from data.dictionary import EmbDict
 from data.loader import read_emb_data, read_pssm_data, read_from_emb
@@ -37,9 +38,9 @@ def get_tfidf(raw_data):
 def train_sup_emb():
     model = fasttext.train_supervised(
         os.path.join(RESOURCE_PATH, "29052020", "raw.train"),
-        # epoch=25,
-        # dim=InputShape.EMB_DIM,
-        autotuneValidationFile=os.path.join(RESOURCE_PATH, "29052020", "raw.ind.test")
+        epoch=25,
+        dim=InputShape.EMB_DIM,
+        # autotuneValidationFile=os.path.join(RESOURCE_PATH, "29052020", "raw.ind.test")
     )
     model.save_model(os.path.join(RESOURCE_PATH, "29052020", "emb.bin"))
     InputShape.EMB_DIM = model.get_dimension()
@@ -137,11 +138,12 @@ def build_model() -> keras.models.Model:
     # )(emb_imd)
 
     tfidf_imd = tfidf_input
-    ifidf_imd = layers.Dense(units=256, activation="relu")(tfidf_imd)
+    tfidf_imd = layers.Dropout(rate=0.1)(tfidf_imd)
+    tfidf_imd = layers.Dense(units=128, activation="relu")(tfidf_imd)
 
-    # imd = emb_imd
-    imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd, ifidf_imd])
-    # imd = layers.Dropout(rate=0.1)(imd)
+    # imd = tfidf_imd
+    imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd, tfidf_imd])
+    imd = layers.Dropout(rate=0.3)(imd)
     # imd = layers.Dense(units=512, activation="relu")(imd)
 
     output_tf = layers.Dense(
@@ -158,7 +160,7 @@ def build_model() -> keras.models.Model:
           # decay=1e-6
       ),
       loss=keras.losses.binary_crossentropy,
-      metrics=get_metrics(threshold=0.5)
+      metrics=get_metrics(threshold=0.1)
     )
 
     return model
@@ -177,20 +179,22 @@ def train(train_ds, test_ds):
         verbose=2,
         shuffle=True,
         class_weight={
-              0: 1,
-              1: 20
+              0: 9,
+              1: 91
         },
         callbacks=callbacks
     )
 
     train_result = evaluate_on_threshold(model, train_ds, threshold=0.1)
     test_result = evaluate_on_threshold(model, test_ds, threshold=0.1)
+    print(train_result)
+    print(test_result)
     return train_result, test_result
 
 
 def build_train_ds(emb_input, pssm_input, tfidf_input, label):
     ds = tf.data.Dataset.from_tensor_slices(((emb_input, pssm_input, tfidf_input), label))
-    ds = ds.shuffle(10000).batch(2)
+    ds = ds.shuffle(10000).batch(1)
     return ds
 
 
@@ -201,6 +205,8 @@ def build_test_ds(emb_input, pssm_input, tfidf_input, label):
 
 
 model_emb = train_sup_emb()
+InputShape.EMB_DIM = model_emb.get_dimension()
+print(model_emb.get_dimension())
 train_emb, test_emb, train_tfidf, test_tfidf = read_from_emb(model_emb)
 train_pssm, test_pssm, train_pssm_label, test_pssm_label = read_pssm_data()
 
@@ -220,6 +226,8 @@ test_emb_input, test_pssm_input, test_tfidf_input, test_label = parse_data(
 train_ds = build_train_ds(train_emb_input, train_pssm_input, train_tfidf_input, train_label)
 test_ds = build_test_ds(test_emb_input, test_pssm_input, test_tfidf_input, test_label)
 
+# os.system("rm -r my_exp/*")
+# shutil.rmtree("D:\workspace\anhtt\Ion-Channel-Classification\my_exp")
 train(train_ds, test_ds)
 
 # train_sup_emb()

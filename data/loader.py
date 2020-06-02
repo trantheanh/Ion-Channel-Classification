@@ -215,7 +215,7 @@ def read_from_emb(emb:fasttext.FastText):
     # Get TF-IDF
     train_raw_data = [" ".join(tokens) for _, tokens in enumerate(train_raw_data[:, :-1])]
     test_raw_data = [" ".join(tokens) for _, tokens in enumerate(test_raw_data[:, :-1])]
-    vectorizer = TfidfVectorizer(max_features=32)
+    vectorizer = TfidfVectorizer(max_features=InputShape.TFIDF_DIM)
     vectorizer.fit(train_raw_data)
     train_tfidf = vectorizer.transform(train_raw_data).todense()
     test_tfidf = vectorizer.transform(test_raw_data).todense()
