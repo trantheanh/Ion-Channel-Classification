@@ -31,15 +31,12 @@ if gpus:
     print(e)
 
 
-def get_tfidf(raw_data):
-    vectorizer = TfidfVectorizer()
-
-
 def train_sup_emb():
     model = fasttext.train_supervised(
         os.path.join(RESOURCE_PATH, DataPath.train_raw_file_name),
         epoch=25,
         dim=InputShape.EMB_DIM,
+        # wordNgrams=2
         # autotuneValidationFile=os.path.join(RESOURCE_PATH, DataPath.test_raw_file_name)
     )
     model.save_model(os.path.join(RESOURCE_PATH, "temp", "emb.bin"))

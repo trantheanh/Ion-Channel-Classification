@@ -9,12 +9,12 @@ class DataPath:
     test_pssm_file_name = "common/pssm.ind.test.csv"
 
     # # wd15
-    # train_raw_file_name = "wd15/raw.train"
-    # test_raw_file_name = "wd15/raw.ind.test"
+    train_raw_file_name = "wd15/raw.train"
+    test_raw_file_name = "wd15/raw.ind.test"
 
     # wd17
-    train_raw_file_name = "wd17/input.train.added"
-    test_raw_file_name = "wd17/input.ind.test.added"
+    #train_raw_file_name = "wd17/input.train.added"
+    #test_raw_file_name = "wd17/input.ind.test.added"
 
     # # wd19
     # train_raw_file_name = "wd19/input.train.added"
