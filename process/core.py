@@ -8,7 +8,7 @@ from constant.index import DataIdx, MetricIdx
 from util.log import log_result, write
 from callbacks.core import build_callbacks
 from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity, BinaryF1Score
-from data.loader import get_fold, get_data, preprocess_data
+from data.loader import get_fold, get_fold_idx, preprocess_data
 from saved_model import SAVED_MODEL_PATH
 
 
@@ -121,39 +121,33 @@ def avg_evaluate(all_results):
 """# Build k-fold training process"""
 
 
-def k_fold_experiment(config, folds_data, test_data):
+def k_fold_experiment(config, fold_idx):
     print(config)
     hparams = config["hparams"]
-    n_fold = config["n_fold"]
 
     train_results = []
     dev_results = []
     need_oversampling = False
-    train_data = get_fold(folds_data=folds_data, need_oversampling=need_oversampling)
-    train_data, test_data = preprocess_data(train_data, test_data)
-    for fold_index in range(len(folds_data)):
+    train_data, test_data = get_fold(fold_idx=fold_idx, need_oversampling=need_oversampling)
+
+    for fold_index in range(len(fold_idx)):
         print("FOLD: {}".format(fold_index + 1))
-        fold_data, dev_data = get_fold(folds_data, fold_index, need_oversampling=need_oversampling)
-        fold_data, dev_data = preprocess_data(fold_data, dev_data)
+        fold_data, dev_data = get_fold(fold_idx, fold_index, need_oversampling=need_oversampling)
 
         train_ds = build_train_ds(
-            mlp_x=fold_data[DataIdx.MLP_FEATURE],
-            rnn_x=fold_data[DataIdx.RNN_FEATURE],
-            y=fold_data[DataIdx.LABEL],
+            fold_data,
             hparams=hparams
         )
 
         dev_ds = build_test_ds(
-            mlp_x=dev_data[DataIdx.MLP_FEATURE],
-            rnn_x=dev_data[DataIdx.RNN_FEATURE],
-            y=dev_data[DataIdx.LABEL]
+            fold_data
         )
 
         train_result, dev_result = train(
             config=config,
             train_ds=train_ds,
             test_ds=dev_ds,
-            need_threshold=True,
+            need_threshold=False,
             need_save=True,
             is_final=False
         )
@@ -170,16 +164,12 @@ def k_fold_experiment(config, folds_data, test_data):
 
     # Train on all & evaluate on test set
     train_ds = build_train_ds(
-        mlp_x=train_data[DataIdx.MLP_FEATURE],
-        rnn_x=train_data[DataIdx.RNN_FEATURE],
-        y=train_data[DataIdx.LABEL],
+        train_data=train_data,
         hparams=hparams,
     )
 
     test_ds = build_test_ds(
-        mlp_x=test_data[DataIdx.MLP_FEATURE],
-        rnn_x=test_data[DataIdx.RNN_FEATURE],
-        y=test_data[DataIdx.LABEL]
+        test_data=test_data
     )
 
     _, test_result = train(
@@ -199,7 +189,7 @@ def k_fold_experiment(config, folds_data, test_data):
 
 def experiment(configs, log_dir):
     n_fold = 5
-    folds_data, test_data = get_data(n_fold)
+    fold_idx = get_fold_idx(n_fold)
     for index, config in enumerate(configs):
         session_log_dir = os.path.join(log_dir, "session_{}".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S")))
         print("\nEXPERIMENT: {}/{}".format(index+1, len(configs)))
@@ -207,14 +197,13 @@ def experiment(configs, log_dir):
         config["log_dir"] = session_log_dir
         config["n_fold"] = n_fold
         config["class_weight"] = {
-              0: 1,
-              1: 1
+              0: 9,
+              1: 91
         }
-        config["verbose"] = 0
+        config["verbose"] = 2
         train_result, dev_result, test_result = k_fold_experiment(
             config=config,
-            folds_data=folds_data,
-            test_data=test_data
+            fold_idx=fold_idx
         )
 
         write(session_log_dir, "train", train_result, config["hparams"])

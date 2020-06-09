@@ -17,7 +17,7 @@ from constant.shape import InputShape
 import shutil
 
 from data.dictionary import EmbDict
-from data.loader import read_emb_data, read_pssm_data, read_from_emb
+from data.loader import read_pssm_data, read_from_emb
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 import fasttext
@@ -111,37 +111,38 @@ def build_model() -> keras.models.Model:
 
     emb_imd = emb_input
 
-    # emb_imd = layers.Conv1D(
-    #     filters=16,
-    #     kernel_size=3,
-    #     strides=1,
-    #     padding='SAME',
-    #     activation="relu"
-    # )(emb_imd)
-    # emb_imd = layers.MaxPool1D()(emb_imd)
+    emb_imd = layers.Conv1D(
+        filters=32,
+        kernel_size=3,
+        strides=1,
+        padding='SAME',
+        activation="relu"
+    )(emb_imd)
+    emb_imd = layers.MaxPool1D()(emb_imd)
 
-    emb_imd = layers.GlobalAveragePooling1D()(emb_imd)
+    # emb_imd = layers.GlobalAveragePooling1D()(emb_imd)
 
-    # emb_imd = layers.GRU(
-    #     units=32,
-    #     return_sequences=False,
-    #     dropout=0.1
+    # emb_imd = layers.LSTM(
+    #     units=1024,
+    #     return_sequences=True,
+    #     # dropout=0.1
     # )(emb_imd)
 
-    # emb_imd = layers.GRU(
-    #     units=512,
-    #     return_sequences=False,
-    #     dropout=0.1
-    # )(emb_imd)
+    emb_imd = layers.LSTM(
+        units=1024,
+        return_sequences=False,
+        dropout=0.1
+    )(emb_imd)
 
     tfidf_imd = tfidf_input
     tfidf_imd = layers.Dropout(rate=0.1)(tfidf_imd)
     tfidf_imd = layers.Dense(units=128, activation="relu")(tfidf_imd)
 
-    # imd = tfidf_imd
+    #imd = tfidf_imd
+    # imd = emb_imd
     imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd, tfidf_imd])
     imd = layers.Dropout(rate=0.3)(imd)
-    # imd = layers.Dense(units=512, activation="relu")(imd)
+    imd = layers.Dense(units=512, activation="relu")(imd)
 
     output_tf = layers.Dense(
       units=1,
@@ -154,7 +155,7 @@ def build_model() -> keras.models.Model:
     model.compile(
       optimizer=keras.optimizers.Nadam(
           # learning_rate=0.001,
-          learning_rate=0.00016280409164167792,
+          learning_rate=0.00001,
           # decay=1e-6
       ),
       loss=keras.losses.binary_crossentropy,
@@ -165,7 +166,7 @@ def build_model() -> keras.models.Model:
 
 
 def train(train_ds, test_ds):
-    n_epoch = 100
+    n_epoch = 200
 
     callbacks = build_callbacks(log_dir="my_exp")
 
@@ -191,11 +192,8 @@ def train(train_ds, test_ds):
 
 
 def build_train_ds(emb_input, pssm_input, tfidf_input, label):
-    # print(emb_input.shape)
-    # print(pssm_input.shape)
-    # print(tfidf_input.shape)
     ds = tf.data.Dataset.from_tensor_slices(((emb_input, pssm_input, tfidf_input), label))
-    ds = ds.shuffle(10000).batch(1)
+    ds = ds.shuffle(10000).batch(16)
     return ds
 
 
@@ -205,7 +203,8 @@ def build_test_ds(emb_input, pssm_input, tfidf_input, label):
     return ds
 
 
-model_emb = train_sup_emb()
+model_emb = load_emb()
+# model_emb = train_sup_emb()
 InputShape.EMB_DIM = model_emb.get_dimension()
 print(model_emb.get_dimension())
 train_emb, test_emb, train_tfidf, test_tfidf = read_from_emb(model_emb)
@@ -227,8 +226,10 @@ test_emb_input, test_pssm_input, test_tfidf_input, test_label = parse_data(
 train_ds = build_train_ds(train_emb_input, train_pssm_input, train_tfidf_input, train_label)
 test_ds = build_test_ds(test_emb_input, test_pssm_input, test_tfidf_input, test_label)
 
+# print(np.sum(train_emb))
+
 # os.system("rm -r my_exp/*")
-# shutil.rmtree("D:\workspace\anhtt\Ion-Channel-Classification\my_exp")
+# shutil.rmtree("D:/workspace/anhtt/Ion-Channel-Classification/my_exp")
 train(train_ds, test_ds)
 
 # train_sup_emb()

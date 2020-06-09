@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import numpy as np
 import os
+import json
 import shutil
 from sklearn.model_selection import StratifiedKFold
 from resource import RESOURCE_PATH
@@ -10,12 +11,11 @@ from constant.shape import InputShape
 from data.sampling import random_from_minor
 from data.dictionary import EmbDict
 import fasttext
+import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
+from models.core import train_tfidf
 
-
-train_path = os.path.join(RESOURCE_PATH, DataPath.train_file_name)
-test_path = os.path.join(RESOURCE_PATH, DataPath.test_file_name)
-fold_path = os.path.join(RESOURCE_PATH, "fold_{}.csv")
+fold_idx_path = os.path.join(RESOURCE_PATH, "fold_idx.npy")
 emb_path = os.path.join(RESOURCE_PATH, DataPath.emb_file_name)
 train_raw_path = os.path.join(RESOURCE_PATH, DataPath.train_raw_file_name)
 test_raw_path = os.path.join(RESOURCE_PATH, DataPath.test_raw_file_name)
@@ -73,15 +73,28 @@ def parse_csv_data(path):
 
 
 def parse_data(data):
-    cb_size = InputShape.CB_SIZE
-    pssm_size = (InputShape.PSSM_LENGTH, InputShape.PSSM_DIM)
-    mlp_input = data[:, :cb_size]
-    rnn_input = np.stack(
-        [data[:, (cb_size + i * pssm_size[1]):(cb_size + (i + 1) * pssm_size[1])] for i in range(pssm_size[0])],
-        axis=1
-    )
-    label = data[:, cb_size + pssm_size[0] * pssm_size[1]]
-    return mlp_input, rnn_input, label
+    raw_data, pssm_data, label = data
+
+    # Load tfidf
+    # with open(os.path.join(RESOURCE_PATH, DataPath.tfidf_file_name), "rb") as f:
+    #     vectorizer = pickle.load(f)
+
+    vectorizer = train_tfidf(raw_data)
+
+    tfidf_data = vectorizer.transform([" ".join(tokens) for _, tokens in enumerate(raw_data)]).todense()
+
+    # Load fasttext Emb
+    model = fasttext.load_model(os.path.join(RESOURCE_PATH, DataPath.emb_file_name))
+
+    emb_data = np.array([
+        [model.get_word_vector(token) for _, token in enumerate(example[0][:])]
+        for _, example in enumerate(raw_data)
+    ])
+
+    # Reshape PSSM
+    pssm_data = np.reshape(pssm_data, newshape=(-1, 15, 20)).astype(np.float)
+
+    return emb_data, pssm_data, tfidf_data, label
 
 
 def normalize(data, mean=None, std=None):
@@ -97,64 +110,58 @@ def normalize(data, mean=None, std=None):
 
 
 def split_k_fold(n_fold=5):
-    cb_size = InputShape.CB_SIZE
-    pssm_size = (InputShape.PSSM_LENGTH, InputShape.PSSM_DIM)
     print("START SPLIT DATA TO {} FOLD".format(n_fold))
-    train_data = pd.read_csv(train_path, header=None).values
+    train_pssm_data = pd.read_csv(train_pssm_path, header=None).values
+    train_raw_data = pd.read_csv(train_raw_path, header=None, delimiter=" ").values
+    # print(train_pssm_data.shape)
 
     folds = StratifiedKFold(
         n_splits=n_fold,
         shuffle=True,
         random_state=0
     ).split(
-        train_data[:, :(cb_size + pssm_size[0] * pssm_size[1])],
-        train_data[:, cb_size + pssm_size[0] * pssm_size[1]]
+        train_pssm_data[:, :-1],
+        train_pssm_data[:, -1]
     )
 
-    folds_data = {}
-
+    fold_idx = []
     for fold_index, fold in enumerate(folds):
-        train_indexes, dev_indexes = fold
-        folds_data[fold_index] = train_data[dev_indexes]
+        fold_idx.append(fold)
 
-    # Save folds to CSV file
-    for i in range(n_fold):
-        np.savetxt(
-            fold_path.format(i),
-            folds_data[i],
-            delimiter=","
-        )
+    np.save(fold_idx_path, fold_idx)
+
+    # Build TFIDF if not exist yet
+    train_tfidf(train_raw_data)
 
     return
 
 
-def get_data(n_fold):
+def get_fold_idx(n_fold):
     for i in range(n_fold):
-        if not os.path.isfile(fold_path.format(i)):
+        if not os.path.isfile(fold_idx_path):
             split_k_fold(n_fold)
             break
 
-    folds_data = []
-    for i in range(n_fold):
-        data = pd.read_csv(fold_path.format(i), header=None).values
-        folds_data.append(data)
+    fold_idx = np.load(fold_idx_path, allow_pickle=True)
 
-    test_data = parse_csv_data(test_path)
-
-    return folds_data, test_data
+    return fold_idx
 
 
-def get_fold(folds_data, fold_index=-1, need_oversampling=True):
-    train_data = np.concatenate([folds_data[i] for i in range(len(folds_data)) if i != fold_index])
+def get_fold(fold_idx, fold_index=-1, need_oversampling=True):
+    raw_data = pd.read_csv(train_raw_path, header=None, delimiter=" ").values
+    pssm_data = pd.read_csv(train_pssm_path, header=None).values
+
+    if fold_index == -1:
+        train_data = (raw_data[:, :-1], pssm_data[:, :-1], raw_data[:, -1])
+        test_raw_data = pd.read_csv(test_raw_path, header=None, delimiter=" ").values
+        test_pssm_data = pd.read_csv(test_pssm_path, header=None).values
+        dev_data = (test_raw_data[:, :-1], test_pssm_data[:, :-1], test_raw_data[:, -1])
+    else:
+        train_idx, dev_idx = fold_idx[fold_index]
+        train_data = (raw_data[train_idx, :-1], pssm_data[train_idx, :-1], raw_data[train_idx, -1])
+        dev_data = (raw_data[dev_idx, :-1], pssm_data[dev_idx, :-1], raw_data[dev_idx, -1])
+
     train_data = parse_data(train_data)
-
-    if need_oversampling:
-        train_data = random_from_minor(train_data[:-1], train_data[-1])
-
-    if fold_index < 0:
-        return train_data
-
-    dev_data = folds_data[fold_index]
     dev_data = parse_data(dev_data)
 
     return train_data, dev_data
@@ -166,56 +173,33 @@ def preprocess_data(train_data, test_data):
     return train_data, test_data
 
 
-def read_raw_data(file_path, need_int=True) -> np.ndarray:
-    data = []
-    with open(file_path, "r") as f:
-        for index, line in enumerate(f):
-            example = []
-            seq = line.split(" ")
-            example += seq[1:-1]
-            if need_int:
-                example.append(int(seq[0] == "__label__A"))
-            else:
-                example.append(seq[0])
-            data.append(example)
-    return np.array(data)
-
-
-def read_emb_data():
-    emb_lookup = EmbDict(emb_path)
-    train_raw_data = read_raw_data(train_raw_path)
-    test_raw_data = read_raw_data(test_raw_path)
-    train_emb_data = emb_lookup(train_raw_data[:, :-1])
-    test_emb_data = emb_lookup(test_raw_data[:, :-1])
-
-    return train_emb_data, test_emb_data, train_raw_data[:, -1], test_raw_data[:, -1]
-
-
-def read_from_emb(emb:fasttext.FastText):
-    train_raw_data = read_raw_data(train_raw_path)
-    test_raw_data = read_raw_data(test_raw_path)
+def read_from_emb(emb: fasttext.FastText):
+    train_raw_data = pd.read_csv(train_raw_path, header=None, delimiter=" ").values
+    test_raw_data = pd.read_csv(test_raw_path, header=None, delimiter=" ").values
 
     # Get embedding
     train_emb = []
-    for _, tokens in enumerate(train_raw_data[:, :-1]):
+    for _, tokens in enumerate(train_raw_data[:, 0]):
         vec = []
         for i in range(len(tokens)):
             vec.append(emb.get_word_vector(tokens[i]))
+
         train_emb.append(vec)
     train_emb = np.array(train_emb)
 
     test_emb = []
-    for _, tokens in enumerate(test_raw_data[:, :-1]):
+    for _, tokens in enumerate(test_raw_data[:, 0]):
         vec = []
         for i in range(len(tokens)):
             vec.append(emb.get_word_vector(tokens[i]))
+
         test_emb.append(vec)
     test_emb = np.array(test_emb)
 
     # Get TF-IDF
-    train_raw_data = [" ".join(tokens) for _, tokens in enumerate(train_raw_data[:, :-1])]
-    test_raw_data = [" ".join(tokens) for _, tokens in enumerate(test_raw_data[:, :-1])]
-    vectorizer = TfidfVectorizer(max_features=InputShape.TFIDF_DIM)
+    train_raw_data = [" ".join(tokens[:]) for _, tokens in enumerate(train_raw_data[:, 0])]
+    test_raw_data = [" ".join(tokens[:]) for _, tokens in enumerate(test_raw_data[:, 0])]
+    vectorizer = TfidfVectorizer(max_features=InputShape.TFIDF_DIM, analyzer="char")
     vectorizer.fit(train_raw_data)
     train_tfidf = vectorizer.transform(train_raw_data).todense()
     test_tfidf = vectorizer.transform(test_raw_data).todense()

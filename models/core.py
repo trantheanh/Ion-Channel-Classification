@@ -4,6 +4,10 @@ import tensorflow.keras.layers as layers
 from optimizers.core import build_optimizer
 from metrics.core import BinarySpecificity, BinarySensitivity, BinaryMCC, BinaryAccuracy, BinaryF1Score
 from constant.shape import InputShape
+from sklearn.feature_extraction.text import TfidfVectorizer
+from resource import RESOURCE_PATH
+import pickle
+import os
 
 
 def flood_loss(b=0.05):
@@ -28,228 +32,88 @@ def get_metrics(threshold=0.5) -> list:
 """# Build model"""
 
 
-def build_lstm_maxout(hparams) -> keras.models.Model:
+# PSSM_GRU = 512
+# PSSM_Dropout = 0.1
+# EMB_Conv1D = 32
+# EMB_LSTM = 1024
+# EMB_Dropout = 0.1
+# TFIDF_Dropout = 0.1
+# TFIDF_units = 128
+# dropout = 0.3
+# units = 512
+# lr = 0.00001
+# threshold = 0.1
+# optimizer = nadam
+# decay = 0
+def build_pfam_emb(hparams) -> keras.models.Model:
     keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
-    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
+    emb_input = layers.Input(shape=(InputShape.EMB_LENGTH, InputShape.EMB_DIM))
+    pssm_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
+    tfidf_input = layers.Input(shape=(InputShape.TFIDF_DIM,))
 
-    rnn_imd = rnn_input
-    for i in range(hparams["rnn_layers"]):
-      rnn_imd = layers.LSTM(
-          units=hparams["rnn_units"],
-          return_sequences=(i+1 < hparams["rnn_layers"]),
-          # activation="sigmoid"
-      )(rnn_imd)
+    # PSSM
+    pssm_imd = pssm_input
 
-    mlp_imd = []
-    for i in range(hparams["maxout_head"]):
-        mlp_imd.append(layers.Dense(units=hparams["maxout_units"])(mlp_input))
+    pssm_imd = layers.GRU(
+        units=hparams["PSSM_GRU"],
+        return_sequences=False,
+        dropout=hparams["PSSM_Dropout"]
+    )(pssm_imd)
 
-    if hparams["maxout_head"] > 1:
-        mlp_imd = layers.Maximum()(mlp_imd)
-    elif hparams["maxout_head"] == 1:
-        mlp_imd = layers.Activation(activation="relu")(mlp_imd[0])
-    else:
-        mlp_imd = mlp_input
+    # Fasttext Emb
+    emb_imd = emb_input
 
-    imd = layers.Concatenate(axis=-1)([rnn_imd, mlp_imd])
-
-    output_tf = layers.Dense(
-      units=1,
-      activation=tf.keras.activations.sigmoid
-    )(imd)
-
-    model = tf.keras.models.Model(inputs=[mlp_input, rnn_input], outputs=output_tf)
-
-    model.compile(
-      optimizer=build_optimizer(
-          optimizer_name=hparams["optimizer"],
-          learning_rate=hparams["learning_rate"],
-          decay=hparams["lr_decay"]
-      ),
-      loss=keras.losses.binary_crossentropy,
-      metrics=get_metrics(hparams["threshold"])
-    )
-
-    return model
-
-
-def build_lstm(hparams) -> keras.models.Model:
-    keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
-    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
-
-    rnn_imd = rnn_input
-    for i in range(hparams["rnn_layers"]):
-        rnn_imd = layers.LSTM(
-            units=hparams["rnn_units"],
-            return_sequences=(i+1 < hparams["rnn_layers"]),
-            # activation="sigmoid"
-        )(rnn_imd)
-
-    imd = rnn_imd
-
-    output_tf = layers.Dense(
-      units=1,
-      activation=tf.keras.activations.sigmoid
-    )(imd)
-
-    model = tf.keras.models.Model(inputs=[mlp_input, rnn_input], outputs=output_tf)
-
-    model.compile(
-      optimizer=build_optimizer(
-          optimizer_name=hparams["optimizer"],
-          learning_rate=hparams["learning_rate"],
-          decay=hparams["lr_decay"]
-      ),
-      loss=keras.losses.binary_crossentropy,
-      metrics=get_metrics(hparams["threshold"])
-    )
-
-    return model
-
-
-def build_lstm_conv(hparams) -> keras.models.Model:
-    keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
-    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
-
-    rnn_imd = rnn_input
-    rnn_imd = layers.Conv1D(
-        filters=hparams["conv1d_depth"],
-        kernel_size=hparams["conv1d_size"],
-        strides=hparams["conv1d_stride"],
+    emb_imd = layers.Conv1D(
+        filters=hparams["EMB_Conv1D"],
+        kernel_size=3,
+        strides=1,
         padding='SAME',
         activation="relu"
-    )(rnn_imd)
-    for i in range(hparams["rnn_layers"]):
-        rnn_imd = layers.LSTM(
-            units=hparams["rnn_units"],
-            return_sequences=(i+1 < hparams["rnn_layers"]),
-            # activation="sigmoid"
-        )(rnn_imd)
+    )(emb_imd)
+    emb_imd = layers.MaxPool1D()(emb_imd)
 
-    imd = rnn_imd
+    emb_imd = layers.LSTM(
+        units=hparams["EMB_LSTM"],
+        return_sequences=False,
+        dropout=hparams["EMB_Dropout"]
+    )(emb_imd)
+
+    # TF-IDF
+    tfidf_imd = tfidf_input
+    tfidf_imd = layers.Dropout(rate=hparams["TFIDF_Dropout"])(tfidf_imd)
+    tfidf_imd = layers.Dense(units=hparams["TFIDF_units"], activation="relu")(tfidf_imd)
+
+    # Concate
+    imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd, tfidf_imd])
     imd = layers.Dropout(rate=hparams["dropout"])(imd)
+    imd = layers.Dense(units=hparams["units"], activation="relu")(imd)
 
     output_tf = layers.Dense(
-      units=1,
-      activation=tf.keras.activations.sigmoid
+        units=1,
+        activation=tf.keras.activations.sigmoid
     )(imd)
 
-    model = tf.keras.models.Model(inputs=[mlp_input, rnn_input], outputs=output_tf)
+    model = tf.keras.models.Model(inputs=[emb_input, pssm_input, tfidf_input], outputs=output_tf)
+    print(model.summary())
 
     model.compile(
-      optimizer=build_optimizer(
-          optimizer_name=hparams["optimizer"],
-          learning_rate=hparams["learning_rate"],
-          decay=hparams["lr_decay"]
-      ),
-      loss=keras.losses.binary_crossentropy,
-      metrics=get_metrics(hparams["threshold"])
+        optimizer=build_optimizer(hparams["optimizer"], hparams["lr"], hparams["decay"]),
+        loss=keras.losses.binary_crossentropy,
+        metrics=get_metrics(threshold=hparams["threshold"])
     )
 
     return model
 
 
-def build_lstm_maxout_dropout(hparams) -> keras.models.Model:
-    keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
-    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
+def train_tfidf(train_raw_data):
+    train_raw_data = [" ".join(tokens[0][:]) for _, tokens in enumerate(train_raw_data)]
+    # vectorizer = TfidfVectorizer(max_features=InputShape.TFIDF_DIM)
+    vectorizer = TfidfVectorizer(analyzer="char")
+    vectorizer.fit(train_raw_data)
 
-    rnn_imd = rnn_input
-    for i in range(hparams["rnn_layers"]):
-      rnn_imd = layers.LSTM(
-          units=hparams["rnn_units"],
-          return_sequences=(i+1 < hparams["rnn_layers"]),
-          # activation="sigmoid"
-      )(rnn_imd)
+    # Save tfidf_vectorizer
+    pickle.dump(vectorizer, open(os.path.join(RESOURCE_PATH, "temp/tfidf.pickle"), "wb"))
 
-    # mlp_imd = []
-    # for i in range(hparams["maxout_head"]):
-    #     mlp_imd.append(layers.Dense(units=hparams["maxout_units"])(mlp_input))
-
-    # if hparams["maxout_head"] > 1:
-    #     mlp_imd = layers.Maximum()(mlp_imd)
-    # elif hparams["maxout_head"] == 1:
-    #     mlp_imd = layers.Activation(activation="relu")(mlp_imd[0])
-    # else:
-    #     mlp_imd = mlp_input
-
-    mlp_imd = layers.Dense(units=hparams["maxout_units"], activation="tanh")(mlp_input)
-
-    imd = layers.Concatenate(axis=-1)([rnn_imd, mlp_imd])
-    imd = layers.Dropout(rate=hparams["dropout"])(imd)
-
-    output_tf = layers.Dense(
-      units=1,
-      activation=tf.keras.activations.sigmoid
-    )(imd)
-
-    model = tf.keras.models.Model(inputs=[mlp_input, rnn_input], outputs=output_tf)
-
-    model.compile(
-      optimizer=build_optimizer(
-          optimizer_name=hparams["optimizer"],
-          learning_rate=hparams["learning_rate"],
-          decay=hparams["lr_decay"]
-      ),
-      # loss=flood_loss(hparams["flood_loss_coef"]),
-      loss=keras.losses.binary_crossentropy,
-      metrics=get_metrics(hparams["threshold"])
-    )
-
-    return model
+    return vectorizer
 
 
-def build_conv_lstm_maxout_dropout(hparams) -> keras.models.Model:
-    keras.backend.clear_session()
-    rnn_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
-    mlp_input = layers.Input(shape=(InputShape.CB_SIZE,))
-
-    rnn_imd = rnn_input
-    rnn_imd = layers.Conv1D(
-        filters=hparams["conv1d_depth"],
-        kernel_size=hparams["conv1d_size"],
-        strides=hparams["conv1d_stride"],
-        padding='SAME',
-        activation="relu"
-    )(rnn_imd)
-    for i in range(hparams["rnn_layers"]):
-        rnn_imd = layers.LSTM(
-            units=hparams["rnn_units"],
-            return_sequences=(i+1 < hparams["rnn_layers"]),
-        )(rnn_imd)
-
-    mlp_imd = []
-    for i in range(hparams["maxout_head"]):
-        mlp_imd.append(layers.Dense(units=hparams["maxout_units"])(mlp_input))
-
-    if hparams["maxout_head"] > 1:
-        mlp_imd = layers.Maximum()(mlp_imd)
-    elif hparams["maxout_head"] == 1:
-        mlp_imd = layers.Activation(activation="relu")(mlp_imd[0])
-    else:
-        mlp_imd = mlp_input
-
-    imd = layers.Concatenate(axis=-1)([rnn_imd, mlp_imd])
-    imd = layers.Dropout(rate=hparams["dropout"])(imd)
-
-    output_tf = layers.Dense(
-      units=1,
-      activation=tf.keras.activations.sigmoid
-    )(imd)
-
-    model = tf.keras.models.Model(inputs=[mlp_input, rnn_input], outputs=output_tf)
-
-    model.compile(
-      optimizer=build_optimizer(
-          optimizer_name=hparams["optimizer"],
-          learning_rate=hparams["learning_rate"],
-          decay=hparams["lr_decay"]
-      ),
-      loss=keras.losses.binary_crossentropy,
-      metrics=get_metrics(hparams["threshold"])
-    )
-
-    return model
