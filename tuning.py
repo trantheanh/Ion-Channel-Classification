@@ -35,7 +35,7 @@ def random_dropout(_number):
 
 
 def random_number(_number):
-    return np.random.randint(low=_number[0], high=_number[1] + 1, size=(n_experiments,)),
+    return np.random.randint(low=_number[0], high=_number[1] + 1, size=(n_experiments,))
 
 
 def random_log10(_number):
@@ -66,7 +66,7 @@ hparams = {
 
 configs = [
     {"hparams": {
-        "threshold": np.random.random(size=(n_experiments,)),
+        "threshold": hparams["threshold"][i],
         "batch_size": int(hparams["batch_size"][i]),
         "lr": hparams["lr"][i],
         "n_epoch": int(hparams["n_epoch"][i]),
