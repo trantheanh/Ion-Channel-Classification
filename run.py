@@ -20,8 +20,6 @@ if gpus:
   except RuntimeError as e:
     print(e)
 
-flags.DEFINE_enum("is_tuning", "Y", ["Y", "N"], "running for auto hyper param tuning or specific setting")
-
 flags.DEFINE_enum("optimizer", "nadam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
 
 flags.DEFINE_integer("batch_size", 32, "Batch size of traning data")
@@ -55,8 +53,6 @@ flags.DEFINE_float("decay", 0, "Learning rate decay")
 
 def main(argv):
     log_dir = os.path.join(os.getcwd(), "log", "hparam_tuning")
-
-    n_experiments = 1000
 
     # batch_size = [1, 2, 4, 8, 16, 32]
     # learning_rate = (0.0001, 0.5)
