@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from resource import RESOURCE_PATH
 import pickle
 import os
+from constant.url import DataPath
 
 
 def flood_loss(b=0.05):
@@ -87,6 +88,7 @@ def build_pfam_emb(hparams) -> keras.models.Model:
     imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd, tfidf_imd])
     imd = layers.Dropout(rate=hparams["dropout"])(imd)
     imd = layers.Dense(units=hparams["units"], activation="relu")(imd)
+    imd = layers.Dropout(rate=hparams["dropout"])(imd)
 
     output_tf = layers.Dense(
         units=1,
@@ -94,7 +96,6 @@ def build_pfam_emb(hparams) -> keras.models.Model:
     )(imd)
 
     model = tf.keras.models.Model(inputs=[emb_input, pssm_input, tfidf_input], outputs=output_tf)
-    print(model.summary())
 
     model.compile(
         optimizer=build_optimizer(hparams["optimizer"], hparams["lr"], hparams["decay"]),
@@ -105,14 +106,13 @@ def build_pfam_emb(hparams) -> keras.models.Model:
     return model
 
 
-def train_tfidf(train_raw_data):
-    train_raw_data = [" ".join(tokens[0][:]) for _, tokens in enumerate(train_raw_data)]
-    # vectorizer = TfidfVectorizer(max_features=InputShape.TFIDF_DIM)
+def train_tfidf(train_raw_data_x):
+    train_raw_data_x = [" ".join(tokens[:]) for _, tokens in enumerate(train_raw_data_x)]
     vectorizer = TfidfVectorizer(analyzer="char")
-    vectorizer.fit(train_raw_data)
+    vectorizer.fit(train_raw_data_x)
 
     # Save tfidf_vectorizer
-    pickle.dump(vectorizer, open(os.path.join(RESOURCE_PATH, "temp/tfidf.pickle"), "wb"))
+    pickle.dump(vectorizer, open(os.path.join(RESOURCE_PATH, DataPath.tfidf_file_name), "wb"))
 
     return vectorizer
 

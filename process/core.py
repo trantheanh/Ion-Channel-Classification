@@ -8,7 +8,8 @@ from constant.index import DataIdx, MetricIdx
 from util.log import log_result, write
 from callbacks.core import build_callbacks
 from metrics.core import BinaryAccuracy, BinaryMCC, BinarySensitivity, BinarySpecificity, BinaryF1Score
-from data.loader import get_fold, get_fold_idx, preprocess_data
+from data.loader import get_fold, get_fold_idx
+""", preprocess_data"""
 from saved_model import SAVED_MODEL_PATH
 
 
@@ -122,7 +123,6 @@ def avg_evaluate(all_results):
 
 
 def k_fold_experiment(config, fold_idx):
-    print(config)
     hparams = config["hparams"]
 
     train_results = []
@@ -140,7 +140,7 @@ def k_fold_experiment(config, fold_idx):
         )
 
         dev_ds = build_test_ds(
-            fold_data
+            dev_data
         )
 
         train_result, dev_result = train(

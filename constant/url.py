@@ -10,6 +10,7 @@ class DataPath:
     test_raw_file_name = "ind.test.unigram"
 
     # Fasttext Emb
+    # emb_file_name = "temp/emb.bin"
     emb_file_name = "temp/emb.bin"
 
     # Tfidf vectorizer

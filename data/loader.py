@@ -87,12 +87,9 @@ def parse_data(data):
     model = fasttext.load_model(os.path.join(RESOURCE_PATH, DataPath.emb_file_name))
 
     emb_data = np.array([
-        [model.get_word_vector(token) for _, token in enumerate(example[0][:])]
+        [model.get_word_vector(token) for _, token in enumerate(example[:])]
         for _, example in enumerate(raw_data)
     ])
-
-    # Reshape PSSM
-    pssm_data = np.reshape(pssm_data, newshape=(-1, 15, 20)).astype(np.float)
 
     return emb_data, pssm_data, tfidf_data, label
 
@@ -111,17 +108,16 @@ def normalize(data, mean=None, std=None):
 
 def split_k_fold(n_fold=5):
     print("START SPLIT DATA TO {} FOLD".format(n_fold))
-    train_pssm_data = pd.read_csv(train_pssm_path, header=None).values
-    train_raw_data = pd.read_csv(train_raw_path, header=None, delimiter=" ").values
-    # print(train_pssm_data.shape)
+    train_pssm_data_x, train_pssm_data_y = read_pssm_data(train_pssm_path)
+    train_raw_data_x, train_raw_data_y = read_raw_data(train_raw_path)
 
     folds = StratifiedKFold(
         n_splits=n_fold,
         shuffle=True,
         random_state=0
     ).split(
-        train_pssm_data[:, :-1],
-        train_pssm_data[:, -1]
+        train_pssm_data_x,
+        train_pssm_data_y
     )
 
     fold_idx = []
@@ -131,7 +127,7 @@ def split_k_fold(n_fold=5):
     np.save(fold_idx_path, fold_idx)
 
     # Build TFIDF if not exist yet
-    train_tfidf(train_raw_data)
+    train_tfidf(train_raw_data_x)
 
     return
 
@@ -148,18 +144,18 @@ def get_fold_idx(n_fold):
 
 
 def get_fold(fold_idx, fold_index=-1, need_oversampling=True):
-    raw_data = pd.read_csv(train_raw_path, header=None, delimiter=" ").values
-    pssm_data = pd.read_csv(train_pssm_path, header=None).values
+    raw_data_x, raw_data_y = read_raw_data(train_raw_path)
+    pssm_data_x, pssm_data_y = read_pssm_data(train_pssm_path)
 
     if fold_index == -1:
-        train_data = (raw_data[:, :-1], pssm_data[:, :-1], raw_data[:, -1])
-        test_raw_data = pd.read_csv(test_raw_path, header=None, delimiter=" ").values
-        test_pssm_data = pd.read_csv(test_pssm_path, header=None).values
-        dev_data = (test_raw_data[:, :-1], test_pssm_data[:, :-1], test_raw_data[:, -1])
+        train_data = (raw_data_x, pssm_data_x, raw_data_y)
+        test_raw_data_x, test_raw_data_y = read_raw_data(test_raw_path)
+        test_pssm_data_x, test_pssm_data_y = read_pssm_data(test_pssm_path)
+        dev_data = (test_raw_data_x, test_pssm_data_x, test_raw_data_y)
     else:
         train_idx, dev_idx = fold_idx[fold_index]
-        train_data = (raw_data[train_idx, :-1], pssm_data[train_idx, :-1], raw_data[train_idx, -1])
-        dev_data = (raw_data[dev_idx, :-1], pssm_data[dev_idx, :-1], raw_data[dev_idx, -1])
+        train_data = (raw_data_x[train_idx], pssm_data_x[train_idx], raw_data_y[train_idx])
+        dev_data = (raw_data_x[dev_idx], pssm_data_x[dev_idx], raw_data_y[dev_idx])
 
     train_data = parse_data(train_data)
     dev_data = parse_data(dev_data)
@@ -167,51 +163,59 @@ def get_fold(fold_idx, fold_index=-1, need_oversampling=True):
     return train_data, dev_data
 
 
-def preprocess_data(train_data, test_data):
-    train_data, mean, std = normalize(train_data)
-    test_data, _, _ = normalize(test_data, mean, std)
-    return train_data, test_data
+# def preprocess_data(train_data, test_data):
+#     train_data, mean, std = normalize(train_data)
+#     test_data, _, _ = normalize(test_data, mean, std)
+#     return train_data, test_data
 
 
-def read_from_emb(emb: fasttext.FastText):
-    train_raw_data = pd.read_csv(train_raw_path, header=None, delimiter=" ").values
-    test_raw_data = pd.read_csv(test_raw_path, header=None, delimiter=" ").values
+# def read_from_emb(emb: fasttext.FastText):
+#     train_raw_data = pd.read_csv(train_raw_path, header=None, delimiter=" ").values
+#     test_raw_data = pd.read_csv(test_raw_path, header=None, delimiter=" ").values
+#
+#     # Get embedding
+#     train_emb = []
+#     for _, tokens in enumerate(train_raw_data[:, 0]):
+#         vec = []
+#         for i in range(len(tokens)):
+#             vec.append(emb.get_word_vector(tokens[i]))
+#
+#         train_emb.append(vec)
+#     train_emb = np.array(train_emb)
+#
+#     test_emb = []
+#     for _, tokens in enumerate(test_raw_data[:, 0]):
+#         vec = []
+#         for i in range(len(tokens)):
+#             vec.append(emb.get_word_vector(tokens[i]))
+#
+#         test_emb.append(vec)
+#     test_emb = np.array(test_emb)
+#
+#     # Get TF-IDF
+#     train_raw_data = [" ".join(tokens[:]) for _, tokens in enumerate(train_raw_data[:, 0])]
+#     test_raw_data = [" ".join(tokens[:]) for _, tokens in enumerate(test_raw_data[:, 0])]
+#     vectorizer = TfidfVectorizer(max_features=InputShape.TFIDF_DIM, analyzer="char")
+#     vectorizer.fit(train_raw_data)
+#     train_tfidf = vectorizer.transform(train_raw_data).todense()
+#     test_tfidf = vectorizer.transform(test_raw_data).todense()
+#
+#     return train_emb, test_emb, train_tfidf, test_tfidf
 
-    # Get embedding
-    train_emb = []
-    for _, tokens in enumerate(train_raw_data[:, 0]):
-        vec = []
-        for i in range(len(tokens)):
-            vec.append(emb.get_word_vector(tokens[i]))
 
-        train_emb.append(vec)
-    train_emb = np.array(train_emb)
+def read_pssm_data(path):
+    pssm_data = pd.read_csv(path, header=None).values
+    pssm_x = pssm_data[:, :-1].astype(np.float)
+    pssm_x = np.reshape(pssm_x, newshape=(-1, InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
+    pssm_y = pssm_data[:, -1]
 
-    test_emb = []
-    for _, tokens in enumerate(test_raw_data[:, 0]):
-        vec = []
-        for i in range(len(tokens)):
-            vec.append(emb.get_word_vector(tokens[i]))
-
-        test_emb.append(vec)
-    test_emb = np.array(test_emb)
-
-    # Get TF-IDF
-    train_raw_data = [" ".join(tokens[:]) for _, tokens in enumerate(train_raw_data[:, 0])]
-    test_raw_data = [" ".join(tokens[:]) for _, tokens in enumerate(test_raw_data[:, 0])]
-    vectorizer = TfidfVectorizer(max_features=InputShape.TFIDF_DIM, analyzer="char")
-    vectorizer.fit(train_raw_data)
-    train_tfidf = vectorizer.transform(train_raw_data).todense()
-    test_tfidf = vectorizer.transform(test_raw_data).todense()
-
-    return train_emb, test_emb, train_tfidf, test_tfidf
+    return pssm_x, pssm_y
 
 
-def read_pssm_data():
-    train_pssm = pd.read_csv(train_pssm_path, header=None).values
-    test_pssm = pd.read_csv(test_pssm_path, header=None).values
+def read_raw_data(path):
+    raw_data = pd.read_csv(path, header=None, delimiter=" ").values
 
-    return train_pssm[:, :-1], test_pssm[:, :-1], train_pssm[:, -1], test_pssm[:, -1]
+    return raw_data[:, 0], raw_data[:, 1]
 
 
 
