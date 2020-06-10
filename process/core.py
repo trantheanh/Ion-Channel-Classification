@@ -96,8 +96,13 @@ def evaluate_on_threshold(model, test_ds, threshold=0.5):
 def get_best_threshold(results):
     best = 0
     best_threshold = 0
-    for threshold, result in results.items():
-        target = result[MetricIdx.F1]
+    metric = MetricIdx.F1
+    for index, (threshold, result) in enumerate(results.items()):
+        if index == 0:
+            best = result[metric]
+            best_threshold = threshold
+
+        target = result[metric]
         if target > best:
             best = target
             best_threshold = threshold
@@ -147,7 +152,7 @@ def k_fold_experiment(config, fold_idx):
             config=config,
             train_ds=train_ds,
             test_ds=dev_ds,
-            need_threshold=False,
+            need_threshold=True,
             need_save=True,
             is_final=False
         )
@@ -177,7 +182,7 @@ def k_fold_experiment(config, fold_idx):
         train_ds=train_ds,
         test_ds=test_ds,
         need_summary=True,
-        need_save=True,
+        need_save=False,
         is_final=True
     )
     test_result = test_result[hparams["threshold"]]
