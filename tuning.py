@@ -11,7 +11,8 @@ if gpus:
   except RuntimeError as e:
     print(e)
 
-batch_size = [1, 2, 4, 8, 16, 32]
+batch_size = [16, 32]
+# batch_size = [1, 2, 4, 8, 16, 32]
 lr = (0.00001, 0.5)
 n_epoch = (50, 150)
 optimizer = ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"]
