@@ -38,16 +38,16 @@ def train(config, train_ds, test_ds, fold_index=-1, need_threshold=True, need_sa
         callbacks=callbacks
     )
 
-    if need_save:
-        if is_final:
-            model.save(os.path.join(SAVED_MODEL_PATH, "{}_{}_final_model.h5".format(
-                config["log_dir"].split("/")[-1],
-                datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            )))
-        else:
-            model.save(os.path.join(SAVED_MODEL_PATH, "{}.h5".format(
-                datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            )))
+    # if need_save:
+    #     if is_final:
+    #         model.save(os.path.join(SAVED_MODEL_PATH, "{}_{}_final_model.h5".format(
+    #             config["log_dir"].split("/")[-1],
+    #             datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    #         )))
+    #     else:
+    #         model.save(os.path.join(SAVED_MODEL_PATH, "{}.h5".format(
+    #             datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    #         )))
 
     if need_threshold:
         train_result = evaluate(model, train_ds)
