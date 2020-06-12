@@ -9,6 +9,10 @@ class DataPath:
     train_raw_file_name = "train.unigram"
     test_raw_file_name = "ind.test.unigram"
 
+    # chemical physics
+    train_cp_file_name = "common/cp.train.csv"
+    test_cp_file_name = "common/cp.ind.test.csv"
+
     # Fasttext Emb
     # emb_file_name = "temp/emb.bin"
     emb_file_name = "temp/emb.bin"

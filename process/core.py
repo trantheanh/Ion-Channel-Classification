@@ -16,16 +16,16 @@ from saved_model import SAVED_MODEL_PATH
 """# Build single training process"""
 
 
-def train(config, train_ds, test_ds, need_summary=False, need_threshold=True, need_save=False, is_final=False):
+def train(config, train_ds, test_ds, fold_index=-1, need_threshold=True, need_save=False, is_final=False):
     hparams = config["hparams"]
     n_epoch = hparams["n_epoch"]
     class_weight = config["class_weight"]
     verbose = config["verbose"]
 
-    callbacks = []
-
-    if need_summary:
+    if fold_index == -1:
         callbacks = build_callbacks(log_dir=config["log_dir"])
+    else:
+        callbacks = build_callbacks(log_dir=config["log_dir"] + "_{}".format(fold_index))
 
     model = build_model(hparams)
     model.fit(
@@ -152,6 +152,7 @@ def k_fold_experiment(config, fold_idx):
             config=config,
             train_ds=train_ds,
             test_ds=dev_ds,
+            fold_index=fold_index,
             need_threshold=True,
             need_save=True,
             is_final=False
@@ -181,7 +182,6 @@ def k_fold_experiment(config, fold_idx):
         config=config,
         train_ds=train_ds,
         test_ds=test_ds,
-        need_summary=True,
         need_save=False,
         is_final=True
     )

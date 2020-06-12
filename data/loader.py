@@ -21,6 +21,8 @@ train_raw_path = os.path.join(RESOURCE_PATH, DataPath.train_raw_file_name)
 test_raw_path = os.path.join(RESOURCE_PATH, DataPath.test_raw_file_name)
 train_pssm_path = os.path.join(RESOURCE_PATH, DataPath.train_pssm_file_name)
 test_pssm_path = os.path.join(RESOURCE_PATH, DataPath.test_pssm_file_name)
+train_cp_path = os.path.join(RESOURCE_PATH, DataPath.train_cp_file_name)
+test_cp_path = os.path.join(RESOURCE_PATH, DataPath.test_cp_file_name)
 
 
 """# Get data from Google Drive"""
@@ -73,7 +75,7 @@ def parse_csv_data(path):
 
 
 def parse_data(data):
-    raw_data, pssm_data, label = data
+    raw_data, pssm_data, cp_data, label = data
 
     # Load tfidf
     # with open(os.path.join(RESOURCE_PATH, DataPath.tfidf_file_name), "rb") as f:
@@ -91,7 +93,7 @@ def parse_data(data):
         for _, example in enumerate(raw_data)
     ])
 
-    return emb_data, pssm_data, tfidf_data, label
+    return emb_data, pssm_data, tfidf_data, cp_data, label
 
 
 def normalize(data, mean=None, std=None):
@@ -146,16 +148,19 @@ def get_fold_idx(n_fold):
 def get_fold(fold_idx, fold_index=-1, need_oversampling=True):
     raw_data_x, raw_data_y = read_raw_data(train_raw_path)
     pssm_data_x, pssm_data_y = read_pssm_data(train_pssm_path)
+    cp_data_x, cp_data_y = read_cp_data(train_cp_path)
 
     if fold_index == -1:
-        train_data = (raw_data_x, pssm_data_x, raw_data_y)
+        train_data = (raw_data_x, pssm_data_x, cp_data_x, raw_data_y)
+
         test_raw_data_x, test_raw_data_y = read_raw_data(test_raw_path)
         test_pssm_data_x, test_pssm_data_y = read_pssm_data(test_pssm_path)
-        dev_data = (test_raw_data_x, test_pssm_data_x, test_raw_data_y)
+        test_cp_data_x, test_cp_data_y = read_cp_data(test_cp_path)
+        dev_data = (test_raw_data_x, test_pssm_data_x, test_cp_data_x, test_raw_data_y)
     else:
         train_idx, dev_idx = fold_idx[fold_index]
-        train_data = (raw_data_x[train_idx], pssm_data_x[train_idx], raw_data_y[train_idx])
-        dev_data = (raw_data_x[dev_idx], pssm_data_x[dev_idx], raw_data_y[dev_idx])
+        train_data = (raw_data_x[train_idx], pssm_data_x[train_idx], cp_data_x[train_idx], raw_data_y[train_idx])
+        dev_data = (raw_data_x[dev_idx], pssm_data_x[dev_idx], cp_data_x[dev_idx], raw_data_y[dev_idx])
 
     train_data = parse_data(train_data)
     dev_data = parse_data(dev_data)
@@ -214,8 +219,18 @@ def read_pssm_data(path):
 
 def read_raw_data(path):
     raw_data = pd.read_csv(path, header=None, delimiter=" ").values
+    raw_x = raw_data[:, 0]
+    raw_y = raw_data[:, 1]
 
-    return raw_data[:, 0], raw_data[:, 1]
+    return raw_x, raw_y
+
+
+def read_cp_data(path):
+    cp_data = pd.read_csv(path, header=None).values
+    cp_x = cp_data[:, :-1].astype(np.float)
+    cp_y = cp_data[:, -1]
+
+    return cp_x, cp_y
 
 
 

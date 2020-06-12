@@ -6,3 +6,4 @@ class InputShape:
     # EMB_LENGTH = 13
     EMB_DIM = 256
     TFIDF_DIM = 22
+    CP_DIM = 46

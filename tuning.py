@@ -27,6 +27,9 @@ EMB_Dropout = (0.01, 0.5)
 TFIDF_Dropout = (0.01, 0.5)
 TFIDF_units = [64, 128, 256, 512]
 
+CP_Dropout = (0.01, 0.5)
+CP_units = [64, 128, 256, 512]
+
 dropout = (0.01, 0.5)
 units = [256, 512, 1024]
 
@@ -70,6 +73,8 @@ hparams = {
     "EMB_Dropout": random_dropout(EMB_Dropout),
     "TFIDF_Dropout": random_dropout(TFIDF_Dropout),
     "TFIDF_units": random_enum(TFIDF_units),
+    "CP_Dropout": random_dropout(CP_Dropout),
+    "CP_units": random_enum(CP_units),
     "dropout": random_dropout(dropout),
     "units": random_enum(units),
 }
@@ -88,6 +93,8 @@ configs = [
         "EMB_Dropout": hparams["EMB_Dropout"][i],
         "TFIDF_Dropout": hparams["TFIDF_Dropout"][i],
         "TFIDF_units": int(hparams["TFIDF_units"][i]),
+        "CP_Dropout": hparams["CP_Dropout"][i],
+        "CP_units": int(hparams["CP_units"][i]),
         "dropout": hparams["dropout"][i],
         "units": int(hparams["PSSM_GRU"][i]),
         "decay": decay,

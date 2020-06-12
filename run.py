@@ -20,33 +20,38 @@ if gpus:
   except RuntimeError as e:
     print(e)
 
-flags.DEFINE_enum("optimizer", "nadam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
+flags.DEFINE_enum("optimizer", "adam", ["adam", "rmsprop", "sgd", "adamax", "adadelta", "nadam"], "Name of optimizer")
 
-flags.DEFINE_integer("batch_size", 32, "Batch size of traning data")
+flags.DEFINE_integer("batch_size", 16, "Batch size of traning data")
 
-flags.DEFINE_float("lr", 0.00001, "learning rate of optimizer")
+flags.DEFINE_float("lr", 0.000020886, "learning rate of optimizer")
 
-flags.DEFINE_integer("n_epoch", 100, "Number of training epoch")
+flags.DEFINE_integer("n_epoch", 108, "Number of training epoch")
 
-flags.DEFINE_integer("PSSM_GRU", 512, "Number of PSSM GRU unit")
+flags.DEFINE_integer("PSSM_GRU", 256, "Number of PSSM GRU unit")
 
-flags.DEFINE_float("PSSM_Dropout", 0.01, "Rate of PSSM Dropout")
+flags.DEFINE_float("PSSM_Dropout", 0.17407, "Rate of PSSM Dropout")
 
-flags.DEFINE_integer("EMB_Conv1D", 32, "Number of Emb Conv1D filter")
+flags.DEFINE_integer("EMB_Conv1D", 16, "Number of Emb Conv1D filter")
 
-flags.DEFINE_integer("EMB_LSTM", 512, "Number of Emb LSTM units")
+flags.DEFINE_integer("EMB_LSTM", 1024, "Number of Emb LSTM units")
 
-flags.DEFINE_float("EMB_Dropout", 0.1, "Rate of Emb Dropout")
+flags.DEFINE_float("EMB_Dropout", 0.46747, "Rate of Emb Dropout")
 
-flags.DEFINE_float("TFIDF_Dropout", 0.01, "Rate of TFIDF Dropout")
+flags.DEFINE_float("TFIDF_Dropout", 0.45716, "Rate of TFIDF Dropout")
 
-flags.DEFINE_integer("TFIDF_units", 128, "Number of TFIDF Dense units")
+flags.DEFINE_integer("TFIDF_units", 512, "Number of TFIDF Dense units")
 
-flags.DEFINE_float("dropout", 0.1, "Rate of Global Dropout")
+flags.DEFINE_float("CP_Dropout", 0.5, "Rate of CP Dropout")
 
-flags.DEFINE_integer("units", 1024, "Number of Global Dense units")
+flags.DEFINE_integer("CP_units", 512, "Number of CP Dense units")
 
-flags.DEFINE_float("threshold", 0.5, "Threshold of model")
+flags.DEFINE_float("dropout", 0.24304, "Rate of Global Dropout")
+# flags.DEFINE_float("dropout", 0.1, "Rate of Global Dropout")
+
+flags.DEFINE_integer("units", 512, "Number of Global Dense units")
+
+flags.DEFINE_float("threshold", 0.78, "Threshold of model")
 
 flags.DEFINE_float("decay", 0, "Learning rate decay")
 
@@ -153,9 +158,10 @@ def main(argv):
             "EMB_Dropout": FLAGS.EMB_Dropout,
             "TFIDF_Dropout": FLAGS.TFIDF_Dropout,
             "TFIDF_units": FLAGS.TFIDF_units,
+            "CP_Dropout": FLAGS.CP_Dropout,
+            "CP_units": FLAGS.CP_units,
             "dropout": FLAGS.dropout,
             "units": FLAGS.units
-
           }
     }
 

@@ -51,6 +51,7 @@ def build_pfam_emb(hparams) -> keras.models.Model:
     emb_input = layers.Input(shape=(InputShape.EMB_LENGTH, InputShape.EMB_DIM))
     pssm_input = layers.Input(shape=(InputShape.PSSM_LENGTH, InputShape.PSSM_DIM))
     tfidf_input = layers.Input(shape=(InputShape.TFIDF_DIM,))
+    cp_input = layers.Input(shape=(InputShape.CP_DIM,))
 
     # PSSM
     pssm_imd = pssm_input
@@ -84,8 +85,13 @@ def build_pfam_emb(hparams) -> keras.models.Model:
     tfidf_imd = layers.Dropout(rate=hparams["TFIDF_Dropout"])(tfidf_imd)
     tfidf_imd = layers.Dense(units=hparams["TFIDF_units"], activation="relu")(tfidf_imd)
 
+    # CP
+    cp_imd = cp_input
+    cp_imd = layers.Dropout(rate=hparams["CP_Dropout"])(cp_imd)
+    cp_imd = layers.Dense(units=hparams["CP_units"], activation="relu")(cp_imd)
+
     # Concate
-    imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd, tfidf_imd])
+    imd = layers.Concatenate(axis=-1)([emb_imd, pssm_imd, tfidf_imd, cp_imd])
     imd = layers.Dropout(rate=hparams["dropout"])(imd)
     imd = layers.Dense(units=hparams["units"], activation="relu")(imd)
     imd = layers.Dropout(rate=hparams["dropout"])(imd)
@@ -95,7 +101,7 @@ def build_pfam_emb(hparams) -> keras.models.Model:
         activation=tf.keras.activations.sigmoid
     )(imd)
 
-    model = tf.keras.models.Model(inputs=[emb_input, pssm_input, tfidf_input], outputs=output_tf)
+    model = tf.keras.models.Model(inputs=[emb_input, pssm_input, tfidf_input, cp_input], outputs=output_tf)
 
     model.compile(
         optimizer=build_optimizer(hparams["optimizer"], hparams["lr"], hparams["decay"]),
